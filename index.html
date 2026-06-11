@@ -803,8 +803,7 @@ function applyHospital() {
   document.querySelectorAll('[data-phone]').forEach(el => el.textContent = h.phone);
   document.querySelectorAll('[data-addr]').forEach(el => el.innerHTML = h.addr);
   const stats = document.querySelectorAll('.stat-num');
-  const vals = [h.stat1, h.stat2, h.stat3, h.stat4];
-  stats.forEach((el, i) => { if (vals[i]) el.textContent = vals[i]; });
+  [h.stat1,h.stat2,h.stat3,h.stat4].forEach((v,i)=>{ if(stats[i]&&v) stats[i].textContent=v; });
   const desc = document.querySelector('.hero-desc');
   if (desc && h.intro) desc.textContent = h.intro;
   const mPhone = document.querySelector('#resvModal strong');
@@ -820,34 +819,30 @@ function applyNotices() {
   const evn = notices.filter(n => n.type === '이벤트');
   const nList = document.querySelector('#notice .notice-col:first-child .notice-list');
   const eList = document.querySelector('#notice .notice-col:last-child .notice-list');
-  if (nList) nList.innerHTML = pub.map(n =>
-    '<li class="notice-item"><span class="notice-badge">공지</span>' +
+  const mkRow = (n, type) =>
+    '<li class="notice-item"><span class="notice-badge' + (type==='이벤트'?' event':'') + '">' + type + '</span>' +
     '<div class="notice-body"><div class="notice-text">' + n.text + '</div>' +
-    '<div class="notice-date">' + n.date + '</div></div></li>'
-  ).join('') || '<li style="padding:12px 0;color:var(--gray);font-size:14px">등록된 공지가 없습니다</li>';
-  if (eList) eList.innerHTML = evn.map(n =>
-    '<li class="notice-item"><span class="notice-badge event">이벤트</span>' +
-    '<div class="notice-body"><div class="notice-text">' + n.text + '</div>' +
-    '<div class="notice-date">' + n.date + '</div></div></li>'
-  ).join('') || '<li style="padding:12px 0;color:var(--gray);font-size:14px">등록된 이벤트가 없습니다</li>';
+    '<div class="notice-date">' + n.date + '</div></div></li>';
+  if (nList) nList.innerHTML = pub.length ? pub.map(n=>mkRow(n,'공지')).join('') : '<li style="padding:12px 0;color:var(--gray);font-size:14px">등록된 공지가 없습니다</li>';
+  if (eList) eList.innerHTML = evn.length ? evn.map(n=>mkRow(n,'이벤트')).join('') : '<li style="padding:12px 0;color:var(--gray);font-size:14px">등록된 이벤트가 없습니다</li>';
 }
 
 /* ── 의료진 반영 ── */
 function applyDoctors() {
   const docs = _load('dino_doctors');
   if (!docs) return;
-  const colors = ['c1','c2','c3','c1','c2'];
   const grid = document.querySelector('.doc-grid');
   if (!grid) return;
-  grid.innerHTML = docs.map(function(d, i) {
-    return '<div class="doc-card fade-in" style="transition-delay:' + (i*0.09) + 's">' +
-      '<div class="doc-img ' + colors[i % colors.length] + '">' + d.emoji +
-      '<span class="doc-dept-badge">' + d.badge + '</span></div>' +
-      '<div class="doc-info"><div class="doc-name">' + d.name + '</div>' +
-      '<div class="doc-title">' + d.title + '<br>' + d.desc + '</div>' +
-      '<div class="doc-spec">' + d.spec.split(',').map(function(s){ return '<span>' + s.trim() + '</span>'; }).join('') + '</div>' +
-      '</div></div>';
-  }).join('');
+  const colors = ['c1','c2','c3','c1','c2'];
+  grid.innerHTML = docs.map((d,i) =>
+    '<div class="doc-card fade-in" style="transition-delay:' + (i*0.09) + 's">' +
+    '<div class="doc-img ' + colors[i%colors.length] + '">' + d.emoji +
+    '<span class="doc-dept-badge">' + d.badge + '</span></div>' +
+    '<div class="doc-info"><div class="doc-name">' + d.name + '</div>' +
+    '<div class="doc-title">' + d.title + '<br>' + d.desc + '</div>' +
+    '<div class="doc-spec">' + d.spec.split(',').map(s=>'<span>'+s.trim()+'</span>').join('') +
+    '</div></div></div>'
+  ).join('');
 }
 
 /* ── 진료과 반영 ── */
@@ -856,13 +851,13 @@ function applyDepts() {
   if (!depts) return;
   const grid = document.querySelector('.dept-grid');
   if (!grid) return;
-  grid.innerHTML = depts.map(function(d, i) {
-    return '<div class="dept-card fade-in" style="transition-delay:' + (i*0.05) + 's">' +
-      '<span class="dept-emoji">' + d.emoji + '</span>' +
-      '<div class="dept-name">' + d.name + '</div>' +
-      '<div class="dept-sub">' + d.sub + '</div>' +
-      '<div class="dept-time">' + d.time + '</div></div>';
-  }).join('');
+  grid.innerHTML = depts.map((d,i) =>
+    '<div class="dept-card fade-in" style="transition-delay:' + (i*0.05) + 's">' +
+    '<span class="dept-emoji">' + d.emoji + '</span>' +
+    '<div class="dept-name">' + d.name + '</div>' +
+    '<div class="dept-sub">' + d.sub + '</div>' +
+    '<div class="dept-time">' + d.time + '</div></div>'
+  ).join('');
 }
 
 /* ── 진료 시간 반영 ── */
@@ -871,23 +866,23 @@ function applyHours() {
   const lunch = _load('dino_lunch');
   const rows = document.querySelectorAll('.hour-row');
   if (!hours || !rows.length) return;
-  const openDays = hours.filter(function(h){ return h.open; });
-  rows.forEach(function(row, i) {
+  const openDays = hours.filter(h => h.open);
+  rows.forEach((row, i) => {
     if (i < openDays.length) {
       row.children[0].textContent = openDays[i].day;
       row.children[1].textContent = openDays[i].start + ' – ' + openDays[i].end;
     }
   });
   if (lunch) {
-    var lRow = Array.from(rows).find(function(r){ return r.children[0].textContent.indexOf('점심') >= 0; });
+    const lRow = Array.from(rows).find(r => r.children[0].textContent.includes('점심'));
     if (lRow) lRow.children[1].textContent = lunch.start + ' – ' + lunch.end;
   }
 }
 
 /* ── 병원 둘러보기 탭 ── */
 function switchFloor(id, btn) {
-  document.querySelectorAll('.tour-floor').forEach(function(f){ f.classList.remove('active'); });
-  document.querySelectorAll('.tour-tab').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.tour-floor').forEach(f => f.classList.remove('active'));
+  document.querySelectorAll('.tour-tab').forEach(b => b.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   btn.classList.add('active');
 }
@@ -900,17 +895,15 @@ function openLightbox(card) {
   document.getElementById('tourLightbox').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-function closeLightbox(e) {
-  if (e.target.id === 'tourLightbox') closeLightboxBtn();
-}
+function closeLightbox(e) { if (e.target.id === 'tourLightbox') closeLightboxBtn(); }
 function closeLightboxBtn() {
   document.getElementById('tourLightbox').classList.remove('open');
   document.body.style.overflow = '';
 }
-document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLightboxBtn(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightboxBtn(); });
 
 /* ── 캘린더 ── */
-var HOLIDAYS = {
+const HOLIDAYS = {
   '2025-01-01':1,'2025-01-28':1,'2025-01-29':1,'2025-01-30':1,
   '2025-03-01':1,'2025-05-05':1,'2025-05-06':1,'2025-06-06':1,
   '2025-08-15':1,'2025-10-03':1,'2025-10-06':1,'2025-10-07':1,
@@ -919,24 +912,24 @@ var HOLIDAYS = {
   '2026-03-01':1,'2026-05-05':1,'2026-06-06':1,'2026-08-17':1,
   '2026-09-24':1,'2026-09-25':1,'2026-10-03':1,'2026-10-09':1,'2026-12-25':1
 };
-var calYear, calMonth, calSelected = null;
+let calYear, calMonth, calSelected = null;
 
 function initCal() {
-  var t = new Date(); calYear = t.getFullYear(); calMonth = t.getMonth(); renderCal();
+  const t = new Date(); calYear = t.getFullYear(); calMonth = t.getMonth(); renderCal();
 }
 function toggleCal() {
-  var pop = document.getElementById('calPopup');
-  if (pop.style.display === 'none' || pop.style.display === '') {
-    pop.style.display = 'block'; initCal();
-    setTimeout(function(){ document.addEventListener('click', closeCal); }, 10);
-  } else { pop.style.display = 'none'; }
+  const pop = document.getElementById('calPopup');
+  if (!pop) return;
+  const isHidden = pop.style.display === 'none' || pop.style.display === '';
+  if (isHidden) { pop.style.display = 'block'; initCal(); setTimeout(() => document.addEventListener('click', outsideCalClick), 10); }
+  else pop.style.display = 'none';
 }
-function closeCal(e) {
-  var pop = document.getElementById('calPopup');
-  var inp = document.getElementById('rf_date');
+function outsideCalClick(e) {
+  const pop = document.getElementById('calPopup');
+  const inp = document.getElementById('rf_date');
   if (pop && !pop.contains(e.target) && e.target !== inp) {
     pop.style.display = 'none';
-    document.removeEventListener('click', closeCal);
+    document.removeEventListener('click', outsideCalClick);
   }
 }
 function changeMonth(dir) {
@@ -945,77 +938,72 @@ function changeMonth(dir) {
   if (calMonth < 0)  { calMonth = 11; calYear--; }
   renderCal();
 }
-function pad2(n) { return String(n).padStart(2, '0'); }
+function p2(n) { return String(n).padStart(2, '0'); }
 function renderCal() {
-  var today = new Date(); today.setHours(0,0,0,0);
-  var months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+  const today = new Date(); today.setHours(0,0,0,0);
+  const months = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
   document.getElementById('calTitle').textContent = calYear + '년 ' + months[calMonth];
-  var grid = document.getElementById('calGrid');
-  grid.innerHTML = '';
-  var firstDay = new Date(calYear, calMonth, 1).getDay();
-  var lastDate = new Date(calYear, calMonth+1, 0).getDate();
-  var html2 = '';
-  for (var i = 0; i < firstDay; i++) html2 += '<div></div>';
-  for (var d = 1; d <= lastDate; d++) {
-    var ds = calYear + '-' + pad2(calMonth+1) + '-' + pad2(d);
-    var dobj = new Date(calYear, calMonth, d);
-    var dow = dobj.getDay();
-    var disabled = (dobj < today) || (dow === 0) || (HOLIDAYS[ds] === 1);
-    var isSat = (dow === 6);
-    var sel = (calSelected === ds);
-    var bg = sel ? 'var(--orange)' : (isSat && !disabled ? '#EFF6FF' : 'transparent');
-    var col = sel ? 'white' : (disabled ? '#CCC' : (isSat ? '#5C9EF5' : 'var(--navy))'));
-    var cur = disabled ? 'default' : 'pointer';
-    var fw = sel ? '700' : '500';
-    var clickAttr = disabled ? '' : ('onclick="selectDate('' + ds + '')"');
-    html2 += '<div ' + clickAttr + ' style="text-align:center;padding:6px 2px;border-radius:8px;font-size:13px;font-weight:' + fw + ';color:' + col + ';background:' + bg + ';cursor:' + cur + '">' + d + '</div>';
+  const grid = document.getElementById('calGrid');
+  if (!grid) return;
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const lastDate = new Date(calYear, calMonth+1, 0).getDate();
+  let rows = '';
+  for (let i = 0; i < firstDay; i++) rows += '<div></div>';
+  for (let d = 1; d <= lastDate; d++) {
+    const ds = calYear + '-' + p2(calMonth+1) + '-' + p2(d);
+    const dobj = new Date(calYear, calMonth, d);
+    const dow = dobj.getDay();
+    const disabled = dobj < today || dow === 0 || HOLIDAYS[ds];
+    const isSat = dow === 6;
+    const sel = calSelected === ds;
+    let bg = 'transparent', col = 'var(--navy)', fw = '500', cur = 'pointer';
+    if (sel)      { bg = 'var(--orange)'; col = 'white'; fw = '700'; }
+    else if (disabled) { col = '#CCCCCC'; cur = 'default'; }
+    else if (isSat)    { col = '#5C9EF5'; bg = '#EFF6FF'; }
+    const clickStr = disabled ? '' : 'onclick="selectDate(\'' + ds + '\')"';
+    rows += '<div ' + clickStr + ' style="text-align:center;padding:6px 2px;border-radius:8px;font-size:13px;font-weight:' + fw + ';color:' + col + ';background:' + bg + ';cursor:' + cur + '">' + d + '</div>';
   }
-  grid.innerHTML = html2;
+  grid.innerHTML = rows;
 }
 function selectDate(ds) {
   calSelected = ds;
-  var parts = ds.split('-');
-  var y = parts[0], m = parseInt(parts[1]), d = parseInt(parts[2]);
-  var el = document.getElementById('rf_date');
-  el.value = y + '년 ' + m + '월 ' + d + '일';
+  const [y, m, d] = ds.split('-');
+  const el = document.getElementById('rf_date');
+  el.value = y + '년 ' + parseInt(m) + '월 ' + parseInt(d) + '일';
   el.dataset.value = ds;
   document.getElementById('calPopup').style.display = 'none';
-  document.removeEventListener('click', closeCal);
+  document.removeEventListener('click', outsideCalClick);
   renderCal();
 }
 
-/* ── 예약 폼 제출 ── */
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyAIQ11fv-UtPZYuq4cBrrMnYQB1z1xUJympipj63cnM0qJm1heUgTW5fXcIszDSXmXfw/exec';
+/* ── 예약 제출 ── */
 function submitResvForm() {
-  var name  = (document.getElementById('rf_name')  || {}).value || '';
-  var birth = (document.getElementById('rf_birth') || {}).value || '';
-  var phone = (document.getElementById('rf_phone') || {}).value || '';
-  var dept  = (document.getElementById('rf_dept')  || {}).value || '';
-  var dateEl = document.getElementById('rf_date');
-  var date  = dateEl ? (dateEl.dataset.value || '') : '';
-  var note  = (document.getElementById('rf_note')  || {}).value || '';
-  name = name.trim(); phone = phone.trim(); note = note.trim(); birth = birth.trim();
-  if (!name)  { alert('아이 이름을 입력해주세요');  document.getElementById('rf_name').focus();  return; }
-  if (!phone) { alert('보호자 연락처를 입력해주세요'); document.getElementById('rf_phone').focus(); return; }
-  if (!dept)  { alert('진료 항목을 선택해주세요');  document.getElementById('rf_dept').focus();  return; }
+  const g = id => document.getElementById(id);
+  const name  = (g('rf_name')  && g('rf_name').value.trim())  || '';
+  const birth = (g('rf_birth') && g('rf_birth').value.trim()) || '';
+  const phone = (g('rf_phone') && g('rf_phone').value.trim()) || '';
+  const dept  = (g('rf_dept')  && g('rf_dept').value)         || '';
+  const dateEl = g('rf_date');
+  const date  = dateEl ? (dateEl.dataset.value || '') : '';
+  const note  = (g('rf_note')  && g('rf_note').value.trim())  || '';
+  if (!name)  { alert('아이 이름을 입력해주세요');   g('rf_name').focus();  return; }
+  if (!phone) { alert('보호자 연락처를 입력해주세요'); g('rf_phone').focus(); return; }
+  if (!dept)  { alert('진료 항목을 선택해주세요');   g('rf_dept').focus();  return; }
   if (!date)  { alert('희망 날짜를 선택해주세요'); return; }
-  var btn = document.querySelector('#reservation .form-submit');
+  const btn = document.querySelector('#reservation .form-submit');
   if (btn) { btn.textContent = '⏳ 접수 중...'; btn.disabled = true; }
-  var now = new Date();
-  var pad = function(n){ return String(n).padStart(2,'0'); };
-  var receivedAt = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
-  var payload = { name:name, birth:birth, phone:phone, dept:dept, date:date, note:note, receivedAt:receivedAt };
-  fetch(GAS_URL, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }).catch(function(){});
-  var resvs = _load('dino_resvs') || [];
-  resvs.push(Object.assign({ id:Date.now(), status:'new' }, payload));
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const receivedAt = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
+  const payload = { name, birth, phone, dept, date, note, receivedAt };
+  const gasUrl = 'https://script.google.com/macros/s/AKfycbyAIQ11fv-UtPZYuq4cBrrMnYQB1z1xUJympipj63cnM0qJm1heUgTW5fXcIszDSXmXfw/exec';
+  fetch(gasUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }).catch(()=>{});
+  const resvs = _load('dino_resvs') || [];
+  resvs.push(Object.assign({ id: Date.now(), status: 'new' }, payload));
   localStorage.setItem('dino_resvs', JSON.stringify(resvs));
-  ['rf_name','rf_birth','rf_phone','rf_note'].forEach(function(id){
-    var el = document.getElementById(id); if (el) el.value = '';
-  });
-  var de = document.getElementById('rf_date');
-  if (de) { de.value = ''; de.dataset.value = ''; }
-  var deptEl = document.getElementById('rf_dept');
-  if (deptEl) deptEl.selectedIndex = 0;
+  ['rf_name','rf_birth','rf_phone','rf_note'].forEach(id => { const el=g(id); if(el) el.value=''; });
+  if (dateEl) { dateEl.value=''; dateEl.dataset.value=''; }
+  const deptEl = g('rf_dept'); if (deptEl) deptEl.selectedIndex = 0;
   calSelected = null;
   if (btn) { btn.textContent = '🦕 예약 신청하기'; btn.disabled = false; }
   openModal();
@@ -1027,22 +1015,22 @@ function closeModal() { document.getElementById('resvModal').classList.remove('o
 function closeModalOutside(e) { if (e.target.id === 'resvModal') closeModal(); }
 
 /* ── 스크롤 애니메이션 ── */
-var observer = new IntersectionObserver(function(entries) {
-  entries.forEach(function(e) { if (e.isIntersecting) e.target.classList.add('visible'); });
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
 }, { threshold: 0.1 });
-document.querySelectorAll('.fade-in').forEach(function(el){ observer.observe(el); });
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-/* ── Nav 스크롤 효과 ── */
-window.addEventListener('scroll', function() {
+/* ── Nav ── */
+window.addEventListener('scroll', () => {
   document.getElementById('mainNav').style.boxShadow =
     window.scrollY > 10 ? '0 3px 20px rgba(255,122,47,0.12)' : 'none';
 });
-var secs  = document.querySelectorAll('section[id]');
-var navAs = document.querySelectorAll('.nav-links a');
-window.addEventListener('scroll', function() {
-  var cur = '';
-  secs.forEach(function(s){ if (window.scrollY >= s.offsetTop - 80) cur = s.id; });
-  navAs.forEach(function(a){ a.style.color = a.getAttribute('href') === '#' + cur ? 'var(--orange)' : ''; });
+const secs  = document.querySelectorAll('section[id]');
+const navAs = document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll', () => {
+  let cur = '';
+  secs.forEach(s => { if (window.scrollY >= s.offsetTop - 80) cur = s.id; });
+  navAs.forEach(a => { a.style.color = a.getAttribute('href') === '#' + cur ? 'var(--orange)' : ''; });
 });
 
 /* ── INIT ── */
@@ -1051,6 +1039,7 @@ applyNotices();
 applyDoctors();
 applyDepts();
 applyHours();
+
 </script>
 </body>
 </html>
