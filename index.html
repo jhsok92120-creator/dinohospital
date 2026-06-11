@@ -631,7 +631,7 @@
           <div class="hour-row"><span>토요일</span><span>09:00 – 13:00</span></div>
           <div class="hour-row"><span>일요일 · 공휴일</span><span class="hour-closed">휴진</span></div>
           <div class="hour-row"><span>점심시간</span><span>12:30 – 13:30</span></div>
-          <div class="phone-box">📞 대표 전화 : 053-000-0000</div>
+          <a href="tel:053-000-0000" class="phone-box" style="text-decoration:none;display:flex;align-items:center;gap:8px;justify-content:center;">📞 대표 전화 : 053-000-0000 <span style="font-size:11px;opacity:.8">(탭하여 전화연결)</span></a>
         </div>
       </div>
 
@@ -708,6 +708,17 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <!-- 희망 원장 -->
+        <div class="form-row">
+          <label class="form-label">희망 원장 (선택)</label>
+          <select class="form-select" id="rf_doctor">
+            <option value="">상관없음 (원장님께 배정)</option>
+            <option value="티라노 병원장">🦖 티라노 병원장</option>
+            <option value="트리케라톱스 원장">🦕 트리케라톱스 원장</option>
+            <option value="스피노 원장">🐊 스피노 원장</option>
+          </select>
         </div>
 
         <!-- 증상 -->
@@ -985,7 +996,8 @@ function submitResvForm() {
   const dept  = (g('rf_dept')  && g('rf_dept').value)         || '';
   const dateEl = g('rf_date');
   const date  = dateEl ? (dateEl.dataset.value || '') : '';
-  const note  = (g('rf_note')  && g('rf_note').value.trim())  || '';
+  const note   = (g('rf_note')   && g('rf_note').value.trim())   || '';
+  const doctor = (g('rf_doctor') && g('rf_doctor').value) || '상관없음';
   if (!name)  { alert('아이 이름을 입력해주세요');   g('rf_name').focus();  return; }
   if (!phone) { alert('보호자 연락처를 입력해주세요'); g('rf_phone').focus(); return; }
   if (!dept)  { alert('진료 항목을 선택해주세요');   g('rf_dept').focus();  return; }
@@ -995,7 +1007,7 @@ function submitResvForm() {
   const now = new Date();
   const pad = n => String(n).padStart(2,'0');
   const receivedAt = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
-  const payload = { name, birth, phone, dept, date, note, receivedAt };
+  const payload = { name, birth, phone, dept, doctor, date, note, receivedAt };
   const gasUrl = 'https://script.google.com/macros/s/AKfycbyAIQ11fv-UtPZYuq4cBrrMnYQB1z1xUJympipj63cnM0qJm1heUgTW5fXcIszDSXmXfw/exec';
   fetch(gasUrl, { method:'POST', mode:'no-cors', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) }).catch(()=>{});
   const resvs = _load('dino_resvs') || [];
@@ -1004,6 +1016,7 @@ function submitResvForm() {
   ['rf_name','rf_birth','rf_phone','rf_note'].forEach(id => { const el=g(id); if(el) el.value=''; });
   if (dateEl) { dateEl.value=''; dateEl.dataset.value=''; }
   const deptEl = g('rf_dept'); if (deptEl) deptEl.selectedIndex = 0;
+  const docEl = g('rf_doctor'); if (docEl) docEl.selectedIndex = 0;
   calSelected = null;
   if (btn) { btn.textContent = '🦕 예약 신청하기'; btn.disabled = false; }
   openModal();
