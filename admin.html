@@ -411,6 +411,17 @@
           <button class="btn btn-orange" onclick="saveHospital()">💾 저장하기</button>
         </div>
         <div class="card">
+          <div class="card-title">🔗 Google Sheets 예약 연동</div>
+          <div class="form-row">
+            <label class="form-label">Apps Script 웹 앱 URL</label>
+            <input class="form-input" id="hGasUrl" placeholder="https://script.google.com/macros/s/..."/>
+            <div style="font-size:12px;color:var(--gray);margin-top:6px">
+              저장 후 홈페이지 예약 폼에서 Google 시트로 자동 전송됩니다
+            </div>
+          </div>
+          <button class="btn btn-mint" onclick="saveGasUrl()">🔗 URL 저장 & 홈페이지 적용</button>
+        </div>
+        <div class="card">
           <div class="card-title">📊 홈페이지 통계 수치</div>
           <div class="form-grid-2" style="margin-bottom:14px">
             <div><label class="form-label">경력 (예: 15년)</label><input class="form-input" id="sStat1" /></div>
@@ -520,9 +531,9 @@ const DEFAULT_NOTICES = [
   {id:8,type:'이벤트',text:'영유아 발달 무료 상담 행사 (월 1회)',date:'매월 셋째 주 토요일'},
 ];
 const DEFAULT_DOCTORS = [
-  {id:1,name:'김다온 원장',title:'소아청소년과 전문의',badge:'원장',emoji:'👨‍⚕️',spec:'호흡기,알레르기,성장',desc:'경북대학교 의과대학 졸업\n소아청소년과 전문의 취득'},
-  {id:2,name:'이소율 과장',title:'소아청소년과 전문의',badge:'과장',emoji:'👩‍⚕️',spec:'신생아,발달,예방접종',desc:'서울아산병원 전임의 수료'},
-  {id:3,name:'박하린 선생님',title:'소아청소년과 전문의',badge:'전문의',emoji:'👩‍⚕️',spec:'아토피,ADHD,건강검진',desc:'아토피·알레르기 클리닉 담당'},
+  {id:1,name:'티라노 병원장',title:'소아청소년과 전문의',badge:'병원장',emoji:'🦖',spec:'호흡기,알레르기,성장',desc:'다이노대학교 의과대학 졸업\n소아청소년과 전문의 취득'},
+  {id:2,name:'트리케라톱스 원장',title:'소아청소년과 전문의',badge:'원장',emoji:'🦕',spec:'신생아,발달,예방접종',desc:'다이노대학병원 전임의 수료'},
+  {id:3,name:'스피노 원장',title:'소아청소년과 전문의',badge:'원장',emoji:'🐊',spec:'아토피,ADHD,건강검진',desc:'아토피·알레르기 클리닉 담당'},
 ];
 const DEFAULT_DEPTS = [
   {id:1,emoji:'🤧',name:'호흡기 진료',sub:'감기·독감·폐렴·천식',time:'월–금 09:00–18:00'},
@@ -560,6 +571,8 @@ function initData(){
   if(!load(KEY.hospital))save(KEY.hospital, DEFAULT_HOSPITAL);
   if(!load(KEY.hours))   save(KEY.hours,   DEFAULT_HOURS);
   if(!load(KEY.resvs))   save(KEY.resvs,   []);
+  // GAS URL 기본값
+  if(!localStorage.getItem('dino_gasUrl')) localStorage.setItem('dino_gasUrl','https://script.google.com/macros/s/AKfycbyAIQ11fv-UtPZYuq4cBrrMnYQB1z1xUJympipj63cnM0qJm1heUgTW5fXcIszDSXmXfw/exec');
 }
 
 /* ======================================================
@@ -823,6 +836,14 @@ function renderHospital(){
   document.getElementById('sStat2').value=h.stat2||'';
   document.getElementById('sStat3').value=h.stat3||'';
   document.getElementById('sStat4').value=h.stat4||'';
+  const savedGasUrl=localStorage.getItem('dino_gasUrl')||'';
+  document.getElementById('hGasUrl').value=savedGasUrl;
+}
+function saveGasUrl(){
+  const url=document.getElementById('hGasUrl').value.trim();
+  if(!url){showToast('URL을 입력하세요',false);return;}
+  localStorage.setItem('dino_gasUrl',url);
+  showToast('URL이 저장되었습니다. 홈페이지를 새로고침하면 적용됩니다');
 }
 function saveHospital(){
   save(KEY.hospital,{
