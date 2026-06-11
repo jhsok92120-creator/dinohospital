@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>다이노아동병원 관리자</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --orange:#FF7A2F;--orange-light:#FF9A5C;--yellow:#FFD046;--yellow-pale:#FFF8E1;
+      --mint:#4ECDC4;--navy:#2D2A4A;--gray:#7B7B9A;--gray-light:#EEEEF5;
+      --red:#EF4444;--green:#22C55E;--white:#fff;--cream:#FFF9F0;
+    }
+    body{font-family:'Noto Sans KR',sans-serif;background:#F4F5FA;color:var(--navy);min-height:100vh}
+
+    /* LOGIN */
+    #loginScreen{
+      display:flex;align-items:center;justify-content:center;
+      min-height:100vh;background:linear-gradient(135deg,#FFF3E0,#FFFDE7);
+    }
+    .login-box{
+      background:white;border-radius:24px;padding:48px 40px;
+      box-shadow:0 12px 48px rgba(255,122,47,0.15);
+      text-align:center;width:360px;max-width:90vw;
+    }
+    .login-logo{font-size:52px;margin-bottom:16px}
+    .login-title{font-size:20px;font-weight:900;margin-bottom:6px}
+    .login-sub{font-size:13px;color:var(--gray);margin-bottom:28px}
+    .login-input{
+      width:100%;padding:13px 16px;border:2px solid var(--gray-light);
+      border-radius:10px;font-family:inherit;font-size:14px;outline:none;
+      transition:border-color .2s;margin-bottom:12px;
+    }
+    .login-input:focus{border-color:var(--orange)}
+    .login-btn{
+      width:100%;padding:14px;background:var(--orange);color:white;
+      border:none;border-radius:28px;font-size:15px;font-weight:700;
+      font-family:inherit;cursor:pointer;transition:all .2s;
+      box-shadow:0 4px 14px rgba(255,122,47,0.35);
+    }
+    .login-btn:hover{background:var(--orange-light)}
+    .login-err{color:var(--red);font-size:13px;margin-top:10px;min-height:18px}
+
+    /* MAIN LAYOUT */
+    #adminApp{display:none;min-height:100vh}
+    .admin-header{
+      background:white;border-bottom:2px solid var(--yellow-pale);
+      padding:0 28px;height:62px;
+      display:flex;align-items:center;justify-content:space-between;
+      position:sticky;top:0;z-index:50;
+    }
+    .admin-header-left{display:flex;align-items:center;gap:12px}
+    .admin-logo-icon{width:36px;height:36px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+    .admin-logo-text{font-weight:900;font-size:16px}
+    .admin-logo-text span{color:var(--orange)}
+    .admin-header-right{display:flex;align-items:center;gap:12px}
+    .preview-btn{
+      background:var(--navy);color:white;border:none;
+      padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;
+      cursor:pointer;font-family:inherit;text-decoration:none;display:inline-block;
+    }
+    .logout-btn{
+      background:var(--gray-light);color:var(--gray);border:none;
+      padding:8px 16px;border-radius:20px;font-size:13px;font-weight:600;
+      cursor:pointer;font-family:inherit;
+    }
+    .logout-btn:hover{color:var(--red)}
+
+    .admin-body{display:flex;min-height:calc(100vh - 62px)}
+
+    /* SIDEBAR */
+    .sidebar{
+      width:220px;flex-shrink:0;background:white;
+      border-right:2px solid var(--gray-light);
+      padding:20px 12px;
+    }
+    .sidebar-section{font-size:11px;font-weight:700;color:var(--gray);
+      letter-spacing:.06em;padding:0 8px;margin:16px 0 8px}
+    .sidebar-item{
+      display:flex;align-items:center;gap:10px;
+      padding:11px 12px;border-radius:10px;cursor:pointer;
+      font-size:14px;font-weight:500;color:var(--navy);
+      transition:all .2s;margin-bottom:2px;
+    }
+    .sidebar-item:hover{background:var(--cream)}
+    .sidebar-item.active{background:var(--yellow-pale);color:var(--orange);font-weight:700}
+    .sidebar-item .si-icon{font-size:17px;width:22px;text-align:center}
+
+    /* CONTENT */
+    .admin-content{flex:1;padding:28px;overflow-y:auto}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
+
+    .panel-header{margin-bottom:24px}
+    .panel-header h2{font-size:20px;font-weight:900;margin-bottom:4px}
+    .panel-header p{font-size:13px;color:var(--gray)}
+
+    /* CARD */
+    .card{background:white;border-radius:16px;padding:24px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,0.05)}
+    .card-title{font-size:15px;font-weight:700;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--gray-light);display:flex;align-items:center;gap:8px}
+
+    /* FORM */
+    .form-row{margin-bottom:16px}
+    .form-label{font-size:13px;font-weight:600;margin-bottom:6px;display:block;color:var(--navy)}
+    .form-input,.form-select,.form-textarea{
+      width:100%;padding:11px 14px;border:2px solid var(--gray-light);
+      border-radius:10px;font-family:inherit;font-size:14px;color:var(--navy);
+      outline:none;transition:border-color .2s;background:white;
+    }
+    .form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--orange)}
+    .form-textarea{resize:vertical;min-height:80px}
+    .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+    /* BUTTONS */
+    .btn{padding:10px 20px;border-radius:20px;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;transition:all .2s}
+    .btn-orange{background:var(--orange);color:white;box-shadow:0 3px 10px rgba(255,122,47,0.3)}
+    .btn-orange:hover{background:var(--orange-light)}
+    .btn-mint{background:var(--mint);color:white}
+    .btn-mint:hover{opacity:.85}
+    .btn-red{background:var(--red);color:white}
+    .btn-red:hover{opacity:.85}
+    .btn-gray{background:var(--gray-light);color:var(--gray)}
+    .btn-gray:hover{color:var(--navy)}
+    .btn-sm{padding:6px 14px;font-size:12px}
+
+    /* NOTICE LIST */
+    .notice-item-row{
+      display:flex;align-items:center;gap:12px;
+      padding:13px 16px;background:var(--cream);border-radius:10px;
+      margin-bottom:8px;
+    }
+    .ni-badge{
+      padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700;
+      white-space:nowrap;flex-shrink:0;
+    }
+    .ni-badge.공지{background:var(--orange);color:white}
+    .ni-badge.이벤트{background:var(--mint);color:var(--navy)}
+    .ni-text{flex:1;font-size:14px}
+    .ni-date{font-size:12px;color:var(--gray);white-space:nowrap}
+    .ni-del{background:none;border:none;color:var(--gray);cursor:pointer;font-size:16px;transition:color .2s}
+    .ni-del:hover{color:var(--red)}
+
+    /* DOCTOR CARD */
+    .doc-edit-card{
+      background:var(--cream);border-radius:14px;padding:20px;
+      margin-bottom:14px;border:2px solid transparent;
+      transition:border-color .2s;
+    }
+    .doc-edit-card:hover{border-color:var(--orange)}
+    .doc-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .doc-card-name{font-size:15px;font-weight:700}
+    .doc-card-actions{display:flex;gap:8px}
+
+    /* DEPT CARD */
+    .dept-edit-card{
+      display:grid;grid-template-columns:auto 1fr auto;
+      align-items:center;gap:14px;
+      background:var(--cream);border-radius:12px;padding:16px 18px;
+      margin-bottom:10px;
+    }
+    .dept-emoji-big{font-size:30px}
+
+    /* RESERVATION TABLE */
+    .resv-table{width:100%;border-collapse:collapse;font-size:13px}
+    .resv-table th{
+      background:var(--navy);color:white;padding:11px 14px;
+      text-align:left;font-weight:600;font-size:12px;
+    }
+    .resv-table th:first-child{border-radius:8px 0 0 0}
+    .resv-table th:last-child{border-radius:0 8px 0 0}
+    .resv-table td{padding:11px 14px;border-bottom:1px solid var(--gray-light)}
+    .resv-table tr:hover td{background:var(--yellow-pale)}
+    .resv-status{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+    .resv-status.new{background:#FEF3C7;color:#D97706}
+    .resv-status.confirmed{background:#D1FAE5;color:#059669}
+    .resv-status.done{background:var(--gray-light);color:var(--gray)}
+
+    /* TOAST */
+    .toast{
+      position:fixed;bottom:28px;right:28px;z-index:9999;
+      background:var(--navy);color:white;
+      padding:14px 20px;border-radius:12px;
+      font-size:14px;font-weight:600;
+      box-shadow:0 6px 24px rgba(0,0,0,0.2);
+      transform:translateY(20px);opacity:0;
+      transition:all .3s;pointer-events:none;
+    }
+    .toast.show{transform:translateY(0);opacity:1}
+
+    /* STATS ROW */
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+    .stat-card{background:white;border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,0.05);text-align:center}
+    .stat-card-num{font-size:28px;font-weight:900;color:var(--orange)}
+    .stat-card-label{font-size:12px;color:var(--gray);margin-top:4px}
+
+    /* HOUR TABLE */
+    .hour-table{width:100%;border-collapse:collapse}
+    .hour-table td{padding:10px 8px;border-bottom:1px solid var(--gray-light);vertical-align:middle}
+    .hour-table td:first-child{font-size:14px;font-weight:600;width:140px}
+    .hour-checkbox{width:18px;height:18px;accent-color:var(--orange);cursor:pointer}
+
+    @media(max-width:768px){
+      .sidebar{display:none}
+      .stats-row{grid-template-columns:1fr 1fr}
+      .form-grid-2,.form-grid-3{grid-template-columns:1fr}
+      .admin-content{padding:16px}
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">🦕</div>
+    <div class="login-title">관리자 로그인</div>
+    <div class="login-sub">다이노아동병원 관리자 페이지</div>
+    <input class="login-input" type="password" id="pwInput" placeholder="비밀번호를 입력하세요" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">로그인</button>
+    <div class="login-err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div id="adminApp">
+  <header class="admin-header">
+    <div class="admin-header-left">
+      <div class="admin-logo-icon">🦕</div>
+      <span class="admin-logo-text">다이노<span>아동병원</span> 관리자</span>
+    </div>
+    <div class="admin-header-right">
+      <a class="preview-btn" href="index.html" target="_blank">🌐 홈페이지 보기</a>
+      <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+    </div>
+  </header>
+
+  <div class="admin-body">
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="sidebar-section">대시보드</div>
+      <div class="sidebar-item active" onclick="switchTab('dashboard',this)">
+        <span class="si-icon">📊</span>대시보드
+      </div>
+      <div class="sidebar-section">콘텐츠 관리</div>
+      <div class="sidebar-item" onclick="switchTab('notice',this)">
+        <span class="si-icon">📢</span>공지 · 이벤트
+      </div>
+      <div class="sidebar-item" onclick="switchTab('doctors',this)">
+        <span class="si-icon">👨‍⚕️</span>의료진 관리
+      </div>
+      <div class="sidebar-item" onclick="switchTab('departments',this)">
+        <span class="si-icon">🏥</span>진료과 관리
+      </div>
+      <div class="sidebar-section">병원 설정</div>
+      <div class="sidebar-item" onclick="switchTab('hospital',this)">
+        <span class="si-icon">⚙️</span>기본 정보
+      </div>
+      <div class="sidebar-item" onclick="switchTab('hours',this)">
+        <span class="si-icon">🕘</span>진료 시간
+      </div>
+      <div class="sidebar-section">예약</div>
+      <div class="sidebar-item" onclick="switchTab('reservations',this)">
+        <span class="si-icon">📅</span>예약 내역
+      </div>
+    </nav>
+
+    <!-- CONTENT -->
+    <main class="admin-content">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="tab-panel active" id="tab-dashboard">
+        <div class="panel-header">
+          <h2>📊 대시보드</h2>
+          <p>다이노아동병원 관리자 현황</p>
+        </div>
+        <div class="stats-row" id="dashStats"></div>
+        <div class="card">
+          <div class="card-title">📅 최근 예약 접수</div>
+          <div id="dashRecentResv"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📢 최근 공지사항</div>
+          <div id="dashRecentNotice"></div>
+        </div>
+      </div>
+
+      <!-- ── NOTICE ── -->
+      <div class="tab-panel" id="tab-notice">
+        <div class="panel-header">
+          <h2>📢 공지사항 · 이벤트 관리</h2>
+          <p>홈페이지에 표시될 공지 및 이벤트를 관리합니다</p>
+        </div>
+        <div class="card">
+          <div class="card-title">➕ 새 항목 등록</div>
+          <div class="form-grid-2" style="margin-bottom:14px">
+            <div class="form-row" style="margin:0">
+              <label class="form-label">유형</label>
+              <select class="form-select" id="noticeType">
+                <option value="공지">공지</option>
+                <option value="이벤트">이벤트</option>
+              </select>
+            </div>
+            <div class="form-row" style="margin:0">
+              <label class="form-label">날짜 / 기간</label>
+              <input class="form-input" id="noticeDate" type="text" placeholder="예) 2025.09.05 또는 ~2025.12.31"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">내용</label>
+            <input class="form-input" id="noticeText" type="text" placeholder="공지 내용을 입력하세요"/>
+          </div>
+          <button class="btn btn-orange" onclick="addNotice()">➕ 등록하기</button>
+        </div>
+        <div class="card">
+          <div class="card-title">📋 공지사항 목록 <span id="noticeCnt" style="font-size:12px;font-weight:500;color:var(--gray)"></span></div>
+          <div id="noticeList"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🎉 이벤트 목록 <span id="eventCnt" style="font-size:12px;font-weight:500;color:var(--gray)"></span></div>
+          <div id="eventList"></div>
+        </div>
+      </div>
+
+      <!-- ── DOCTORS ── -->
+      <div class="tab-panel" id="tab-doctors">
+        <div class="panel-header">
+          <h2>👨‍⚕️ 의료진 관리</h2>
+          <p>의료진 정보를 수정하거나 추가/삭제합니다</p>
+        </div>
+        <div class="card">
+          <div class="card-title">➕ 의료진 추가</div>
+          <div class="form-grid-2" style="margin-bottom:12px">
+            <div><label class="form-label">이름 *</label><input class="form-input" id="docName" placeholder="김다온 원장"/></div>
+            <div><label class="form-label">직함 *</label><input class="form-input" id="docTitle" placeholder="소아청소년과 전문의"/></div>
+          </div>
+          <div class="form-grid-2" style="margin-bottom:12px">
+            <div><label class="form-label">직위 배지</label><input class="form-input" id="docBadge" placeholder="원장 / 과장 / 전문의"/></div>
+            <div><label class="form-label">이모지 (프로필)</label><input class="form-input" id="docEmoji" placeholder="👨‍⚕️"/></div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">전문 분야 (쉼표로 구분)</label>
+            <input class="form-input" id="docSpec" placeholder="호흡기, 알레르기, 성장"/>
+          </div>
+          <div class="form-row">
+            <label class="form-label">약력</label>
+            <textarea class="form-textarea" id="docDesc" placeholder="경북대학교 의과대학 졸업&#10;소아청소년과 전임의 수료"></textarea>
+          </div>
+          <button class="btn btn-orange" onclick="addDoctor()">➕ 의료진 추가</button>
+        </div>
+        <div class="card">
+          <div class="card-title">👥 의료진 목록</div>
+          <div id="doctorList"></div>
+        </div>
+      </div>
+
+      <!-- ── DEPARTMENTS ── -->
+      <div class="tab-panel" id="tab-departments">
+        <div class="panel-header">
+          <h2>🏥 진료과 관리</h2>
+          <p>진료과 정보를 수정하거나 추가/삭제합니다</p>
+        </div>
+        <div class="card">
+          <div class="card-title">➕ 진료과 추가</div>
+          <div class="form-grid-3" style="margin-bottom:12px">
+            <div><label class="form-label">이모지</label><input class="form-input" id="deptEmoji" placeholder="🤧"/></div>
+            <div><label class="form-label">진료과명 *</label><input class="form-input" id="deptName" placeholder="호흡기 진료"/></div>
+            <div><label class="form-label">설명</label><input class="form-input" id="deptSub" placeholder="감기·독감·폐렴·천식"/></div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">진료 시간</label>
+            <input class="form-input" id="deptTime" placeholder="월–금 09:00–18:00"/>
+          </div>
+          <button class="btn btn-orange" onclick="addDept()">➕ 진료과 추가</button>
+        </div>
+        <div class="card">
+          <div class="card-title">📋 진료과 목록</div>
+          <div id="deptList"></div>
+        </div>
+      </div>
+
+      <!-- ── HOSPITAL INFO ── -->
+      <div class="tab-panel" id="tab-hospital">
+        <div class="panel-header">
+          <h2>⚙️ 병원 기본 정보</h2>
+          <p>홈페이지에 표시되는 병원 기본 정보를 수정합니다</p>
+        </div>
+        <div class="card">
+          <div class="card-title">🏥 병원 정보</div>
+          <div class="form-grid-2" style="margin-bottom:14px">
+            <div><label class="form-label">병원명</label><input class="form-input" id="hName" /></div>
+            <div><label class="form-label">영문명</label><input class="form-input" id="hNameEn" /></div>
+          </div>
+          <div class="form-grid-2" style="margin-bottom:14px">
+            <div><label class="form-label">대표 전화</label><input class="form-input" id="hPhone" /></div>
+            <div><label class="form-label">개원연도</label><input class="form-input" id="hYear" type="number"/></div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">주소</label>
+            <input class="form-input" id="hAddr" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">주차 안내</label>
+            <input class="form-input" id="hParking" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">병원 소개 (한 줄)</label>
+            <textarea class="form-textarea" id="hIntro" style="min-height:70px"></textarea>
+          </div>
+          <button class="btn btn-orange" onclick="saveHospital()">💾 저장하기</button>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 홈페이지 통계 수치</div>
+          <div class="form-grid-2" style="margin-bottom:14px">
+            <div><label class="form-label">경력 (예: 15년)</label><input class="form-input" id="sStat1" /></div>
+            <div><label class="form-label">누적 환자 (예: 3만+)</label><input class="form-input" id="sStat2" /></div>
+          </div>
+          <div class="form-grid-2">
+            <div><label class="form-label">만족도 (예: 99%)</label><input class="form-input" id="sStat3" /></div>
+            <div><label class="form-label">운영 요일 (예: 토요일)</label><input class="form-input" id="sStat4" /></div>
+          </div>
+          <div style="margin-top:16px">
+            <button class="btn btn-orange" onclick="saveHospital()">💾 저장하기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── HOURS ── -->
+      <div class="tab-panel" id="tab-hours">
+        <div class="panel-header">
+          <h2>🕘 진료 시간 관리</h2>
+          <p>요일별 진료 시간을 설정합니다</p>
+        </div>
+        <div class="card">
+          <div class="card-title">진료 시간 설정</div>
+          <table class="hour-table" id="hourTable"></table>
+          <div style="margin-top:20px">
+            <button class="btn btn-orange" onclick="saveHours()">💾 저장하기</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🍽️ 점심 시간</div>
+          <div class="form-grid-2">
+            <div><label class="form-label">시작</label><input class="form-input" type="time" id="lunchStart"/></div>
+            <div><label class="form-label">종료</label><input class="form-input" type="time" id="lunchEnd"/></div>
+          </div>
+          <div style="margin-top:16px">
+            <button class="btn btn-orange" onclick="saveHours()">💾 저장하기</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── RESERVATIONS ── -->
+      <div class="tab-panel" id="tab-reservations">
+        <div class="panel-header">
+          <h2>📅 예약 접수 내역</h2>
+          <p>온라인으로 접수된 예약 내역을 확인합니다</p>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <select class="form-select" id="resvFilter" style="width:140px" onchange="renderReservations()">
+              <option value="all">전체</option>
+              <option value="new">신규</option>
+              <option value="confirmed">확인완료</option>
+              <option value="done">진료완료</option>
+            </select>
+            <button class="btn btn-gray" onclick="addSampleResv()">🧪 샘플 예약 추가</button>
+            <button class="btn btn-red btn-sm" onclick="clearResvConfirm()" style="margin-left:auto">🗑️ 전체 삭제</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">예약 목록 <span id="resvTotalCnt" style="font-size:12px;color:var(--gray);font-weight:500"></span></div>
+          <div style="overflow-x:auto">
+            <table class="resv-table">
+              <thead><tr>
+                <th>접수일</th><th>아이이름</th><th>생년월일</th>
+                <th>연락처</th><th>진료항목</th><th>희망날짜</th>
+                <th>증상</th><th>상태</th><th>관리</th>
+              </tr></thead>
+              <tbody id="resvTableBody"></tbody>
+            </table>
+          </div>
+          <div id="resvEmpty" style="text-align:center;padding:40px;color:var(--gray);display:none">
+            접수된 예약이 없습니다
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ======================================================
+   STORAGE HELPERS
+====================================================== */
+const ADMIN_PW = 'dino1234';
+const KEY = {
+  notices:'dino_notices', doctors:'dino_doctors', depts:'dino_depts',
+  hospital:'dino_hospital', hours:'dino_hours', resvs:'dino_resvs'
+};
+
+const load = k => { try { return JSON.parse(localStorage.getItem(k)) } catch(e){ return null } };
+const save = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+
+/* ======================================================
+   DEFAULT DATA
+====================================================== */
+const DEFAULT_NOTICES = [
+  {id:1,type:'공지',text:'추석 연휴 진료 안내 (9/14~9/17 휴진)',date:'2025.09.05'},
+  {id:2,type:'공지',text:'토요일 진료 시간 변경 안내 (오후 1시 마감)',date:'2025.08.18'},
+  {id:3,type:'공지',text:'영유아 건강검진 예약 방법 변경 안내',date:'2025.08.01'},
+  {id:4,type:'공지',text:'소아신경·행동 클리닉 개설 안내 (화·목 오후)',date:'2025.07.15'},
+  {id:5,type:'이벤트',text:'독감 예방접종 사전 예약 시작 🎯',date:'~2025.11.30'},
+  {id:6,type:'이벤트',text:'온라인 첫 예약 고객 진료비 10% 할인',date:'상시'},
+  {id:7,type:'이벤트',text:'형제·자매 함께 예약 시 진료비 할인 혜택',date:'~2025.12.31'},
+  {id:8,type:'이벤트',text:'영유아 발달 무료 상담 행사 (월 1회)',date:'매월 셋째 주 토요일'},
+];
+const DEFAULT_DOCTORS = [
+  {id:1,name:'김다온 원장',title:'소아청소년과 전문의',badge:'원장',emoji:'👨‍⚕️',spec:'호흡기,알레르기,성장',desc:'경북대학교 의과대학 졸업\n소아청소년과 전문의 취득'},
+  {id:2,name:'이소율 과장',title:'소아청소년과 전문의',badge:'과장',emoji:'👩‍⚕️',spec:'신생아,발달,예방접종',desc:'서울아산병원 전임의 수료'},
+  {id:3,name:'박하린 선생님',title:'소아청소년과 전문의',badge:'전문의',emoji:'👩‍⚕️',spec:'아토피,ADHD,건강검진',desc:'아토피·알레르기 클리닉 담당'},
+];
+const DEFAULT_DEPTS = [
+  {id:1,emoji:'🤧',name:'호흡기 진료',sub:'감기·독감·폐렴·천식',time:'월–금 09:00–18:00'},
+  {id:2,emoji:'🤒',name:'열·감염 진료',sub:'고열·수족구·장염·수두',time:'월–토 09:00–18:00'},
+  {id:3,emoji:'💉',name:'예방접종',sub:'영유아·독감·필수접종',time:'월–토 09:00–17:00'},
+  {id:4,emoji:'📏',name:'성장·발달',sub:'성장 모니터링·발달 평가',time:'월–금 10:00–17:00'},
+  {id:5,emoji:'🍼',name:'신생아 진료',sub:'신생아 건강검진·황달',time:'월–금 09:00–17:00'},
+  {id:6,emoji:'🍫',name:'알레르기·아토피',sub:'식품알레르기·아토피',time:'월–금 09:00–18:00'},
+  {id:7,emoji:'🧠',name:'소아신경·행동',sub:'ADHD·틱·발달지연 상담',time:'화·목 13:00–17:00'},
+  {id:8,emoji:'🩺',name:'영유아 건강검진',sub:'국가 무료 건강검진',time:'월–금 09:00–17:00'},
+];
+const DEFAULT_HOSPITAL = {
+  name:'다이노아동병원', nameEn:'Dino Children\'s Hospital',
+  phone:'053-000-0000', year:2010,
+  addr:'대구광역시 수성구 어린이로 45 다이노빌딩 2·3층',
+  parking:'건물 지하 주차장 (2시간 무료)',
+  intro:'겁 많은 아이도 다이노 선생님과 함께라면 씩씩해져요.',
+  stat1:'15년', stat2:'3만+', stat3:'99%', stat4:'토요일',
+};
+const DEFAULT_HOURS = [
+  {day:'월요일',open:true,start:'09:00',end:'18:00'},
+  {day:'화요일',open:true,start:'09:00',end:'18:00'},
+  {day:'수요일',open:true,start:'09:00',end:'18:00'},
+  {day:'목요일',open:true,start:'09:00',end:'18:00'},
+  {day:'금요일',open:true,start:'09:00',end:'18:00'},
+  {day:'토요일',open:true,start:'09:00',end:'13:00'},
+  {day:'일요일',open:false,start:'',end:''},
+  {day:'공휴일',open:false,start:'',end:''},
+];
+
+function initData(){
+  if(!load(KEY.notices)) save(KEY.notices, DEFAULT_NOTICES);
+  if(!load(KEY.doctors)) save(KEY.doctors, DEFAULT_DOCTORS);
+  if(!load(KEY.depts))   save(KEY.depts,   DEFAULT_DEPTS);
+  if(!load(KEY.hospital))save(KEY.hospital, DEFAULT_HOSPITAL);
+  if(!load(KEY.hours))   save(KEY.hours,   DEFAULT_HOURS);
+  if(!load(KEY.resvs))   save(KEY.resvs,   []);
+}
+
+/* ======================================================
+   LOGIN
+====================================================== */
+function doLogin(){
+  const pw = document.getElementById('pwInput').value;
+  if(pw === ADMIN_PW){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('adminApp').style.display='block';
+    initData(); renderAll();
+  } else {
+    document.getElementById('loginErr').textContent='비밀번호가 올바르지 않습니다';
+    document.getElementById('pwInput').value='';
+  }
+}
+function doLogout(){
+  document.getElementById('adminApp').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('pwInput').value='';
+  document.getElementById('loginErr').textContent='';
+}
+
+/* ======================================================
+   TAB
+====================================================== */
+function switchTab(name, el){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  el.classList.add('active');
+  renderTab(name);
+}
+function renderTab(name){
+  if(name==='dashboard') renderDashboard();
+  else if(name==='notice') renderNotice();
+  else if(name==='doctors') renderDoctors();
+  else if(name==='departments') renderDepts();
+  else if(name==='hospital') renderHospital();
+  else if(name==='hours') renderHours();
+  else if(name==='reservations') renderReservations();
+}
+function renderAll(){ renderDashboard(); }
+
+/* ======================================================
+   TOAST
+====================================================== */
+function showToast(msg, ok=true){
+  const t=document.getElementById('toast');
+  t.textContent=(ok?'✅ ':'❌ ')+msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+/* ======================================================
+   DASHBOARD
+====================================================== */
+function renderDashboard(){
+  const notices = load(KEY.notices)||[];
+  const resvs   = load(KEY.resvs)||[];
+  const docs     = load(KEY.doctors)||[];
+  const depts    = load(KEY.depts)||[];
+
+  document.getElementById('dashStats').innerHTML=`
+    <div class="stat-card"><div class="stat-card-num">${resvs.length}</div><div class="stat-card-label">전체 예약</div></div>
+    <div class="stat-card"><div class="stat-card-num">${resvs.filter(r=>r.status==='new').length}</div><div class="stat-card-label">신규 예약</div></div>
+    <div class="stat-card"><div class="stat-card-num">${notices.length}</div><div class="stat-card-label">공지·이벤트</div></div>
+    <div class="stat-card"><div class="stat-card-num">${docs.length}</div><div class="stat-card-label">의료진</div></div>
+  `;
+
+  const recentResv = resvs.slice(-5).reverse();
+  document.getElementById('dashRecentResv').innerHTML = recentResv.length
+    ? recentResv.map(r=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-light)">
+        <span class="resv-status ${r.status}">${{new:'신규',confirmed:'확인',done:'완료'}[r.status]||r.status}</span>
+        <span style="font-size:14px;font-weight:600">${r.name}</span>
+        <span style="font-size:13px;color:var(--gray)">${r.dept}</span>
+        <span style="font-size:12px;color:var(--gray);margin-left:auto">${r.date}</span>
+      </div>`).join('')
+    : '<p style="color:var(--gray);font-size:14px;padding:12px 0">예약이 없습니다</p>';
+
+  const recentN = notices.slice(-4).reverse();
+  document.getElementById('dashRecentNotice').innerHTML = recentN.length
+    ? recentN.map(n=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--gray-light)">
+        <span class="ni-badge ${n.type}">${n.type}</span>
+        <span style="font-size:14px">${n.text}</span>
+        <span style="font-size:12px;color:var(--gray);margin-left:auto">${n.date}</span>
+      </div>`).join('')
+    : '<p style="color:var(--gray);font-size:14px;padding:12px 0">공지가 없습니다</p>';
+}
+
+/* ======================================================
+   NOTICE
+====================================================== */
+function renderNotice(){
+  const notices = load(KEY.notices)||[];
+  const pub = notices.filter(n=>n.type==='공지');
+  const evn = notices.filter(n=>n.type==='이벤트');
+
+  document.getElementById('noticeCnt').textContent = `(${pub.length}건)`;
+  document.getElementById('eventCnt').textContent  = `(${evn.length}건)`;
+
+  document.getElementById('noticeList').innerHTML = pub.length
+    ? pub.map(n=>noticeRow(n)).join('') : '<p style="color:var(--gray);font-size:14px">없습니다</p>';
+  document.getElementById('eventList').innerHTML  = evn.length
+    ? evn.map(n=>noticeRow(n)).join('') : '<p style="color:var(--gray);font-size:14px">없습니다</p>';
+}
+function noticeRow(n){
+  return `<div class="notice-item-row">
+    <span class="ni-badge ${n.type}">${n.type}</span>
+    <span class="ni-text">${n.text}</span>
+    <span class="ni-date">${n.date}</span>
+    <button class="ni-del" onclick="deleteNotice(${n.id})">✕</button>
+  </div>`;
+}
+function addNotice(){
+  const type=document.getElementById('noticeType').value;
+  const text=document.getElementById('noticeText').value.trim();
+  const date=document.getElementById('noticeDate').value.trim();
+  if(!text){ showToast('내용을 입력하세요',false); return; }
+  const notices=load(KEY.notices)||[];
+  const id=Date.now();
+  notices.push({id,type,text,date:date||'—'});
+  save(KEY.notices,notices);
+  document.getElementById('noticeText').value='';
+  document.getElementById('noticeDate').value='';
+  renderNotice();
+  showToast('공지가 등록되었습니다');
+}
+function deleteNotice(id){
+  if(!confirm('삭제하시겠습니까?')) return;
+  const notices=(load(KEY.notices)||[]).filter(n=>n.id!==id);
+  save(KEY.notices,notices);
+  renderNotice();
+  showToast('삭제되었습니다');
+}
+
+/* ======================================================
+   DOCTORS
+====================================================== */
+function renderDoctors(){
+  const docs=load(KEY.doctors)||[];
+  document.getElementById('doctorList').innerHTML = docs.length
+    ? docs.map((d,i)=>`
+      <div class="doc-edit-card">
+        <div class="doc-card-header">
+          <div class="doc-card-name">${d.emoji} ${d.name} <span style="font-size:12px;color:var(--gray);font-weight:500">${d.badge}</span></div>
+          <div class="doc-card-actions">
+            <button class="btn btn-gray btn-sm" onclick="editDoctor(${d.id})">✏️ 수정</button>
+            <button class="btn btn-red btn-sm" onclick="deleteDoctor(${d.id})">삭제</button>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--gray);margin-bottom:8px">${d.title}</div>
+        <div style="font-size:13px;color:var(--gray);white-space:pre-line;margin-bottom:8px">${d.desc}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">${d.spec.split(',').map(s=>`<span style="background:var(--yellow-pale);color:var(--orange);font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600">${s.trim()}</span>`).join('')}</div>
+      </div>`).join('')
+    : '<p style="color:var(--gray);font-size:14px">등록된 의료진이 없습니다</p>';
+}
+function addDoctor(){
+  const name=document.getElementById('docName').value.trim();
+  const title=document.getElementById('docTitle').value.trim();
+  if(!name||!title){ showToast('이름과 직함을 입력하세요',false); return; }
+  const docs=load(KEY.doctors)||[];
+  docs.push({
+    id:Date.now(),
+    name, title,
+    badge:document.getElementById('docBadge').value.trim()||'전문의',
+    emoji:document.getElementById('docEmoji').value.trim()||'👨‍⚕️',
+    spec:document.getElementById('docSpec').value.trim()||'소아청소년과',
+    desc:document.getElementById('docDesc').value.trim(),
+  });
+  save(KEY.doctors,docs);
+  ['docName','docTitle','docBadge','docEmoji','docSpec','docDesc'].forEach(id=>document.getElementById(id).value='');
+  renderDoctors();
+  showToast('의료진이 추가되었습니다');
+}
+function deleteDoctor(id){
+  if(!confirm('삭제하시겠습니까?')) return;
+  save(KEY.doctors,(load(KEY.doctors)||[]).filter(d=>d.id!==id));
+  renderDoctors(); showToast('삭제되었습니다');
+}
+function editDoctor(id){
+  const docs=load(KEY.doctors)||[];
+  const d=docs.find(x=>x.id===id);
+  if(!d) return;
+  const name=prompt('이름',d.name); if(name===null) return;
+  const title=prompt('직함',d.title); if(title===null) return;
+  const spec=prompt('전문분야 (쉼표구분)',d.spec); if(spec===null) return;
+  const desc=prompt('약력',d.desc); if(desc===null) return;
+  const badge=prompt('직위 배지',d.badge); if(badge===null) return;
+  Object.assign(d,{name,title,spec,desc,badge});
+  save(KEY.doctors,docs); renderDoctors(); showToast('수정되었습니다');
+}
+
+/* ======================================================
+   DEPARTMENTS
+====================================================== */
+function renderDepts(){
+  const depts=load(KEY.depts)||[];
+  document.getElementById('deptList').innerHTML = depts.length
+    ? depts.map(d=>`
+      <div class="dept-edit-card">
+        <div class="dept-emoji-big">${d.emoji}</div>
+        <div>
+          <div style="font-size:15px;font-weight:700">${d.name}</div>
+          <div style="font-size:13px;color:var(--gray)">${d.sub}</div>
+          <div style="font-size:12px;color:var(--orange);font-weight:600;margin-top:3px">${d.time}</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-gray btn-sm" onclick="editDept(${d.id})">✏️</button>
+          <button class="btn btn-red btn-sm" onclick="deleteDept(${d.id})">✕</button>
+        </div>
+      </div>`).join('')
+    : '<p style="color:var(--gray);font-size:14px">없습니다</p>';
+}
+function addDept(){
+  const name=document.getElementById('deptName').value.trim();
+  if(!name){ showToast('진료과명을 입력하세요',false); return; }
+  const depts=load(KEY.depts)||[];
+  depts.push({
+    id:Date.now(),
+    emoji:document.getElementById('deptEmoji').value.trim()||'🏥',
+    name,
+    sub:document.getElementById('deptSub').value.trim(),
+    time:document.getElementById('deptTime').value.trim(),
+  });
+  save(KEY.depts,depts);
+  ['deptEmoji','deptName','deptSub','deptTime'].forEach(id=>document.getElementById(id).value='');
+  renderDepts(); showToast('진료과가 추가되었습니다');
+}
+function deleteDept(id){
+  if(!confirm('삭제하시겠습니까?')) return;
+  save(KEY.depts,(load(KEY.depts)||[]).filter(d=>d.id!==id));
+  renderDepts(); showToast('삭제되었습니다');
+}
+function editDept(id){
+  const depts=load(KEY.depts)||[];
+  const d=depts.find(x=>x.id===id); if(!d) return;
+  const name=prompt('진료과명',d.name); if(name===null) return;
+  const sub=prompt('설명',d.sub); if(sub===null) return;
+  const time=prompt('진료시간',d.time); if(time===null) return;
+  const emoji=prompt('이모지',d.emoji); if(emoji===null) return;
+  Object.assign(d,{name,sub,time,emoji});
+  save(KEY.depts,depts); renderDepts(); showToast('수정되었습니다');
+}
+
+/* ======================================================
+   HOSPITAL INFO
+====================================================== */
+function renderHospital(){
+  const h=load(KEY.hospital)||DEFAULT_HOSPITAL;
+  document.getElementById('hName').value=h.name||'';
+  document.getElementById('hNameEn').value=h.nameEn||'';
+  document.getElementById('hPhone').value=h.phone||'';
+  document.getElementById('hYear').value=h.year||'';
+  document.getElementById('hAddr').value=h.addr||'';
+  document.getElementById('hParking').value=h.parking||'';
+  document.getElementById('hIntro').value=h.intro||'';
+  document.getElementById('sStat1').value=h.stat1||'';
+  document.getElementById('sStat2').value=h.stat2||'';
+  document.getElementById('sStat3').value=h.stat3||'';
+  document.getElementById('sStat4').value=h.stat4||'';
+}
+function saveHospital(){
+  save(KEY.hospital,{
+    name:document.getElementById('hName').value,
+    nameEn:document.getElementById('hNameEn').value,
+    phone:document.getElementById('hPhone').value,
+    year:document.getElementById('hYear').value,
+    addr:document.getElementById('hAddr').value,
+    parking:document.getElementById('hParking').value,
+    intro:document.getElementById('hIntro').value,
+    stat1:document.getElementById('sStat1').value,
+    stat2:document.getElementById('sStat2').value,
+    stat3:document.getElementById('sStat3').value,
+    stat4:document.getElementById('sStat4').value,
+  });
+  showToast('병원 정보가 저장되었습니다');
+}
+
+/* ======================================================
+   HOURS
+====================================================== */
+function renderHours(){
+  const hours=load(KEY.hours)||DEFAULT_HOURS;
+  const lunch=load('dino_lunch')||{start:'12:30',end:'13:30'};
+  document.getElementById('lunchStart').value=lunch.start;
+  document.getElementById('lunchEnd').value=lunch.end;
+  document.getElementById('hourTable').innerHTML=`
+    <thead><tr>
+      <th style="padding:10px 8px;text-align:left;font-size:13px;font-weight:700;border-bottom:2px solid var(--gray-light)">요일</th>
+      <th style="padding:10px 8px;font-size:13px;font-weight:700;border-bottom:2px solid var(--gray-light)">진료여부</th>
+      <th style="padding:10px 8px;font-size:13px;font-weight:700;border-bottom:2px solid var(--gray-light)">시작</th>
+      <th style="padding:10px 8px;font-size:13px;font-weight:700;border-bottom:2px solid var(--gray-light)">종료</th>
+    </tr></thead>
+    <tbody>${hours.map((h,i)=>`
+      <tr>
+        <td style="font-weight:600;font-size:14px">${h.day}</td>
+        <td style="text-align:center"><input type="checkbox" class="hour-checkbox" id="hOpen_${i}" ${h.open?'checked':''} onchange="toggleHourRow(${i})"/></td>
+        <td><input type="time" class="form-input" id="hStart_${i}" value="${h.start}" style="width:120px" ${h.open?'':'disabled'}/></td>
+        <td><input type="time" class="form-input" id="hEnd_${i}" value="${h.end}" style="width:120px" ${h.open?'':'disabled'}/></td>
+      </tr>`).join('')}
+    </tbody>`;
+}
+function toggleHourRow(i){
+  const open=document.getElementById('hOpen_'+i).checked;
+  document.getElementById('hStart_'+i).disabled=!open;
+  document.getElementById('hEnd_'+i).disabled=!open;
+}
+function saveHours(){
+  const hours=load(KEY.hours)||DEFAULT_HOURS;
+  hours.forEach((h,i)=>{
+    h.open=document.getElementById('hOpen_'+i).checked;
+    h.start=document.getElementById('hStart_'+i).value;
+    h.end=document.getElementById('hEnd_'+i).value;
+  });
+  save(KEY.hours,hours);
+  save('dino_lunch',{
+    start:document.getElementById('lunchStart').value,
+    end:document.getElementById('lunchEnd').value,
+  });
+  showToast('진료 시간이 저장되었습니다');
+}
+
+/* ======================================================
+   RESERVATIONS
+====================================================== */
+function renderReservations(){
+  let resvs=load(KEY.resvs)||[];
+  const filter=document.getElementById('resvFilter').value;
+  if(filter!=='all') resvs=resvs.filter(r=>r.status===filter);
+  document.getElementById('resvTotalCnt').textContent=`(${resvs.length}건)`;
+  const tbody=document.getElementById('resvTableBody');
+  const empty=document.getElementById('resvEmpty');
+  if(!resvs.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  tbody.innerHTML=resvs.map(r=>`
+    <tr>
+      <td>${r.receivedAt||'—'}</td>
+      <td style="font-weight:600">${r.name}</td>
+      <td>${r.birth}</td>
+      <td>${r.phone}</td>
+      <td>${r.dept}</td>
+      <td>${r.date}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.note||'—'}</td>
+      <td><span class="resv-status ${r.status}">${{new:'신규',confirmed:'확인완료',done:'진료완료'}[r.status]||r.status}</span></td>
+      <td>
+        <select class="form-select" style="padding:4px 8px;font-size:12px;width:100px" onchange="updateResvStatus(${r.id},this.value)">
+          <option value="new" ${r.status==='new'?'selected':''}>신규</option>
+          <option value="confirmed" ${r.status==='confirmed'?'selected':''}>확인완료</option>
+          <option value="done" ${r.status==='done'?'selected':''}>진료완료</option>
+        </select>
+      </td>
+    </tr>`).join('');
+}
+function updateResvStatus(id,status){
+  const resvs=load(KEY.resvs)||[];
+  const r=resvs.find(x=>x.id===id); if(!r) return;
+  r.status=status;
+  save(KEY.resvs,resvs); renderReservations(); showToast('상태가 변경되었습니다');
+}
+function addSampleResv(){
+  const names=['박민준','이지유','김서아','최하온','정시우'];
+  const depts=['호흡기 (감기·독감)','예방접종','성장·발달 상담','알레르기·아토피','영유아 건강검진'];
+  const resvs=load(KEY.resvs)||[];
+  const n=names[Math.floor(Math.random()*names.length)];
+  const d=depts[Math.floor(Math.random()*depts.length)];
+  const today=new Date(); const pad=n=>String(n).padStart(2,'0');
+  resvs.push({
+    id:Date.now(), name:n, birth:'2022-03-'+pad(Math.ceil(Math.random()*28)),
+    phone:`010-${Math.floor(Math.random()*9000)+1000}-${Math.floor(Math.random()*9000)+1000}`,
+    dept:d, date:`2025-${pad(Math.ceil(Math.random()*3)+9)}-${pad(Math.ceil(Math.random()*28))}`,
+    note:'열이 있어요', status:'new',
+    receivedAt:`${today.getMonth()+1}/${today.getDate()} ${pad(today.getHours())}:${pad(today.getMinutes())}`,
+  });
+  save(KEY.resvs,resvs); renderReservations(); showToast('샘플 예약이 추가되었습니다');
+}
+function clearResvConfirm(){
+  if(!confirm('예약 내역을 전체 삭제하시겠습니까?')) return;
+  save(KEY.resvs,[]); renderReservations(); showToast('삭제되었습니다');
+}
+
+/* ======================================================
+   ENTER KEY
+====================================================== */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter' && document.getElementById('loginScreen').style.display!=='none') doLogin();
+});
+</script>
+</body>
+</html>
