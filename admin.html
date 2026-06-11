@@ -207,6 +207,42 @@
       .form-grid-2,.form-grid-3{grid-template-columns:1fr}
       .admin-content{padding:16px}
     }
+
+    /* ── 미디어 업로드 ── */
+    .media-upload-area {
+      border: 2px dashed var(--gray-light); border-radius: 12px;
+      padding: 20px; text-align: center; cursor: pointer;
+      transition: border-color .2s; background: var(--cream);
+    }
+    .media-upload-area:hover { border-color: var(--orange); }
+    .media-upload-area input[type=file] { display: none; }
+    .media-preview-wrap { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .media-preview-item {
+      position: relative; border-radius: 10px; overflow: hidden;
+      width: 110px; height: 88px; background: var(--gray-light);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .media-preview-item img, .media-preview-item video { width:100%;height:100%;object-fit:cover; }
+    .media-preview-item .rm-btn {
+      position: absolute; top: 3px; right: 3px;
+      background: rgba(0,0,0,0.6); color: white; border: none;
+      border-radius: 50%; width: 20px; height: 20px;
+      font-size: 11px; cursor: pointer;
+    }
+    /* ── 공지 상세 모달 ── */
+    .notice-detail-modal {
+      display: none; position: fixed; inset: 0; z-index: 600;
+      background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: 20px;
+    }
+    .notice-detail-modal.open { display: flex; }
+    .notice-detail-box {
+      background: white; border-radius: 20px; padding: 32px;
+      max-width: 640px; width: 100%; max-height: 80vh; overflow-y: auto;
+      position: relative;
+    }
+    .notice-detail-body { font-size: 14px; color: var(--gray); line-height: 1.8; margin: 16px 0; white-space: pre-wrap; }
+    .notice-detail-media { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+    .nd-close { position: absolute; top: 16px; right: 16px; background: var(--gray-light); border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -308,8 +344,22 @@
             </div>
           </div>
           <div class="form-row">
-            <label class="form-label">내용</label>
-            <input class="form-input" id="noticeText" type="text" placeholder="공지 내용을 입력하세요"/>
+            <label class="form-label">제목 *</label>
+            <input class="form-input" id="noticeText" type="text" placeholder="공지/이벤트 제목을 입력하세요"/>
+          </div>
+          <div class="form-row">
+            <label class="form-label">내용 (상세 설명)</label>
+            <textarea class="form-textarea" id="noticeBody" placeholder="상세 내용을 입력하세요 (선택사항)" style="min-height:100px"></textarea>
+          </div>
+          <div class="form-row">
+            <label class="form-label">이미지 / 동영상 첨부</label>
+            <div class="media-upload-area" onclick="document.getElementById('noticeMedia').click()">
+              <div style="font-size:28px;margin-bottom:6px">📎</div>
+              <div style="font-size:14px;font-weight:600;color:var(--navy)">클릭하여 파일 선택</div>
+              <div style="font-size:12px;color:var(--gray);margin-top:4px">이미지 (JPG·PNG·GIF·WEBP) · 동영상 (MP4·MOV) 지원</div>
+              <input type="file" id="noticeMedia" accept="image/*,video/*" multiple onchange="previewMedia(this)"/>
+            </div>
+            <div class="media-preview-wrap" id="mediaPreview"></div>
           </div>
           <button class="btn btn-orange" onclick="addNotice()">➕ 등록하기</button>
         </div>
@@ -502,6 +552,21 @@
   </div>
 </div>
 
+
+<!-- 공지 상세 모달 -->
+<div class="notice-detail-modal" id="noticeDetailModal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="notice-detail-box">
+    <button class="nd-close" onclick="document.getElementById('noticeDetailModal').classList.remove('open')">✕</button>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <span id="ndBadge" class="ni-badge"></span>
+      <h3 id="ndTitle" style="margin:0"></h3>
+    </div>
+    <div style="font-size:12px;color:var(--gray)" id="ndDate"></div>
+    <div class="notice-detail-body" id="ndBody"></div>
+    <div class="notice-detail-media" id="ndMedia"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -682,26 +747,92 @@ function renderNotice(){
     ? evn.map(n=>noticeRow(n)).join('') : '<p style="color:var(--gray);font-size:14px">없습니다</p>';
 }
 function noticeRow(n){
-  return `<div class="notice-item-row">
-    <span class="ni-badge ${n.type}">${n.type}</span>
-    <span class="ni-text">${n.text}</span>
-    <span class="ni-date">${n.date}</span>
-    <button class="ni-del" onclick="deleteNotice(${n.id})">✕</button>
-  </div>`;
+  const hasDetail = n.body || (n.media && n.media.length);
+  return '<div class="notice-item-row">' +
+    '<span class="ni-badge ' + n.type + '">' + n.type + '</span>' +
+    '<span class="ni-text" style="cursor:' + (hasDetail?'pointer':'default') + '" onclick="' + (hasDetail?'viewNotice('+n.id+')':'') + '">' +
+      n.text + (hasDetail ? ' <span style="font-size:11px;color:var(--green)">📄 상세있음</span>' : '') +
+    '</span>' +
+    '<span class="ni-date">' + n.date + '</span>' +
+    '<button class="ni-del" onclick="deleteNotice(' + n.id + ')">✕</button>' +
+  '</div>';
 }
 function addNotice(){
   const type=document.getElementById('noticeType').value;
   const text=document.getElementById('noticeText').value.trim();
+  const body=document.getElementById('noticeBody').value.trim();
   const date=document.getElementById('noticeDate').value.trim();
-  if(!text){ showToast('내용을 입력하세요',false); return; }
+  if(!text){ showToast('제목을 입력하세요',false); return; }
   const notices=load(KEY.notices)||[];
   const id=Date.now();
-  notices.push({id,type,text,date:date||'—'});
+  // 미디어 base64 수집
+  const mediaData = window._pendingMedia || [];
+  notices.push({id,type,text,body,date:date||'—',media:mediaData});
   save(KEY.notices,notices);
   document.getElementById('noticeText').value='';
+  document.getElementById('noticeBody').value='';
   document.getElementById('noticeDate').value='';
+  document.getElementById('mediaPreview').innerHTML='';
+  window._pendingMedia=[];
   renderNotice();
-  showToast('공지가 등록되었습니다');
+  showToast('등록되었습니다');
+}
+
+function previewMedia(input){
+  const files=Array.from(input.files);
+  if(!files.length) return;
+  window._pendingMedia = window._pendingMedia||[];
+  const preview=document.getElementById('mediaPreview');
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=function(e){
+      const dataUrl=e.target.result;
+      const isVideo=file.type.startsWith('video');
+      window._pendingMedia.push({type:isVideo?'video':'image', src:dataUrl, name:file.name});
+      const item=document.createElement('div');
+      item.className='media-preview-item';
+      item.innerHTML=(isVideo
+        ? '<video src="'+dataUrl+'" muted style="width:100%;height:100%;object-fit:cover"></video>'
+        : '<img src="'+dataUrl+'" alt="'+file.name+'"/>')+
+        '<button class="rm-btn" onclick="removeMedia('+( window._pendingMedia.length-1)+',this)">✕</button>';
+      preview.appendChild(item);
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value='';
+}
+
+function removeMedia(idx, btn){
+  if(window._pendingMedia) window._pendingMedia.splice(idx,1);
+  btn.parentElement.remove();
+}
+
+function viewNotice(id){
+  const notices=load(KEY.notices)||[];
+  const n=notices.find(x=>x.id===id);
+  if(!n) return;
+  const modal=document.getElementById('noticeDetailModal');
+  document.getElementById('ndTitle').textContent=n.text;
+  document.getElementById('ndBadge').textContent=n.type;
+  document.getElementById('ndBadge').className='ni-badge '+n.type;
+  document.getElementById('ndDate').textContent=n.date;
+  document.getElementById('ndBody').textContent=n.body||'';
+  const mediaWrap=document.getElementById('ndMedia');
+  mediaWrap.innerHTML='';
+  if(n.media&&n.media.length){
+    n.media.forEach(m=>{
+      if(m.type==='video'){
+        const v=document.createElement('video');
+        v.src=m.src; v.controls=true; v.style.maxWidth='100%'; v.style.borderRadius='10px';
+        mediaWrap.appendChild(v);
+      } else {
+        const img=document.createElement('img');
+        img.src=m.src; img.style.maxWidth='100%'; img.style.borderRadius='10px';
+        mediaWrap.appendChild(img);
+      }
+    });
+  }
+  modal.classList.add('open');
 }
 function deleteNotice(id){
   if(!confirm('삭제하시겠습니까?')) return;

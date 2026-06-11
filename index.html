@@ -830,10 +830,17 @@ function applyNotices() {
   const evn = notices.filter(n => n.type === '이벤트');
   const nList = document.querySelector('#notice .notice-col:first-child .notice-list');
   const eList = document.querySelector('#notice .notice-col:last-child .notice-list');
-  const mkRow = (n, type) =>
-    '<li class="notice-item"><span class="notice-badge' + (type==='이벤트'?' event':'') + '">' + type + '</span>' +
-    '<div class="notice-body"><div class="notice-text">' + n.text + '</div>' +
-    '<div class="notice-date">' + n.date + '</div></div></li>';
+  const mkRow = (n, type) => {
+    const hasDetail = n.body || (n.media && n.media.length);
+    const clickAttr = hasDetail ? 'onclick="showNoticeDetail(' + n.id + ')" style="cursor:pointer"' : '';
+    const badge = type === '이벤트' ? ' event' : '';
+    return '<li class="notice-item" ' + clickAttr + '>' +
+      '<span class="notice-badge' + badge + '">' + type + '</span>' +
+      '<div class="notice-body">' +
+        '<div class="notice-text">' + n.text + (hasDetail ? ' <span style="font-size:11px;color:var(--orange)">▶ 자세히</span>' : '') + '</div>' +
+        '<div class="notice-date">' + n.date + '</div>' +
+      '</div></li>';
+  };
   if (nList) nList.innerHTML = pub.length ? pub.map(n=>mkRow(n,'공지')).join('') : '<li style="padding:12px 0;color:var(--gray);font-size:14px">등록된 공지가 없습니다</li>';
   if (eList) eList.innerHTML = evn.length ? evn.map(n=>mkRow(n,'이벤트')).join('') : '<li style="padding:12px 0;color:var(--gray);font-size:14px">등록된 이벤트가 없습니다</li>';
 }
@@ -1020,6 +1027,33 @@ function submitResvForm() {
   calSelected = null;
   if (btn) { btn.textContent = '🦕 예약 신청하기'; btn.disabled = false; }
   openModal();
+}
+
+
+/* ── 공지 상세 보기 ── */
+function showNoticeDetail(id) {
+  const notices = _load('dino_notices') || [];
+  const n = notices.find(x => x.id === id);
+  if (!n) return;
+  let html2 = '<div style="position:fixed;inset:0;z-index:800;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px" id="noticeModal" onclick="if(event.target.id===\'noticeModal\')this.remove()">';
+  html2 += '<div style="background:white;border-radius:20px;padding:32px;max-width:600px;width:100%;max-height:80vh;overflow-y:auto;position:relative">';
+  html2 += '<button onclick="document.getElementById(\'noticeModal\').remove()" style="position:absolute;top:14px;right:14px;background:var(--gray-light);border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px">✕</button>';
+  html2 += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">';
+  html2 += '<span style="background:' + (n.type==='이벤트'?'var(--mint)':'var(--orange)') + ';color:' + (n.type==='이벤트'?'var(--navy)':'white') + ';font-size:11px;padding:3px 9px;border-radius:6px;font-weight:700">' + n.type + '</span>';
+  html2 += '<h3 style="font-size:18px;font-weight:900;margin:0">' + n.text + '</h3></div>';
+  html2 += '<div style="font-size:12px;color:var(--gray);margin-bottom:16px">' + n.date + '</div>';
+  if (n.body) html2 += '<div style="font-size:14px;color:var(--gray);line-height:1.8;white-space:pre-wrap;margin-bottom:16px">' + n.body + '</div>';
+  if (n.media && n.media.length) {
+    n.media.forEach(function(m) {
+      if (m.type === 'video') {
+        html2 += '<video src="' + m.src + '" controls style="max-width:100%;border-radius:10px;margin-bottom:10px;display:block"></video>';
+      } else {
+        html2 += '<img src="' + m.src + '" style="max-width:100%;border-radius:10px;margin-bottom:10px;display:block"/>';
+      }
+    });
+  }
+  html2 += '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html2);
 }
 
 /* ── 예약 모달 ── */
