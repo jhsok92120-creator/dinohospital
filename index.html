@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>다이노아동병원 | 아이들의 건강한 친구</title>
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="theme-color" content="#FF7A2F"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+  <meta name="apple-mobile-web-app-title" content="다이노병원"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png"/>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
@@ -1090,6 +1100,15 @@ applyNotices();
 applyDoctors();
 applyDepts();
 applyHours();
+
+/* ── Service Worker 등록 ── */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/dinohospital/sw.js')
+      .then(reg => console.log('SW 등록 완료:', reg.scope))
+      .catch(err => console.log('SW 등록 실패:', err));
+  });
+}
 
 </script>
 </body>
