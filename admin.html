@@ -296,6 +296,10 @@
       <div class="sidebar-item" onclick="switchTab('hours',this)">
         <span class="si-icon">🕘</span>진료 시간
       </div>
+      <div class="sidebar-section">병원 사진</div>
+      <div class="sidebar-item" onclick="switchTab('photos',this)">
+        <span class="si-icon">🖼️</span>병원 사진 관리
+      </div>
       <div class="sidebar-section">예약</div>
       <div class="sidebar-item" onclick="switchTab('reservations',this)">
         <span class="si-icon">📅</span>예약 내역
@@ -529,6 +533,28 @@
         </div>
       </div>
 
+      <!-- ── PHOTOS ── -->
+      <div class="tab-panel" id="tab-photos">
+        <div class="panel-header">
+          <h2>🖼️ 병원 사진 관리</h2>
+          <p>병원 소개 섹션에 표시될 사진을 관리합니다 (최대 10장)</p>
+        </div>
+        <div class="card">
+          <div class="card-title">📤 사진 추가</div>
+          <div class="media-upload-area" onclick="document.getElementById('aboutImgFile').click()">
+            <div style="font-size:32px;margin-bottom:8px">📷</div>
+            <div style="font-size:14px;font-weight:600;color:var(--navy)">클릭하여 사진 선택</div>
+            <div style="font-size:12px;color:var(--gray);margin-top:4px">JPG · PNG · WEBP · 최대 10장</div>
+            <input type="file" id="aboutImgFile" accept="image/*" multiple style="display:none" onchange="addAboutImgs(this)"/>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🖼️ 사진 목록 <span id="photoCnt" style="font-size:12px;color:var(--gray);font-weight:500"></span></div>
+          <div id="photoList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:4px"></div>
+          <div id="photoEmpty" style="color:var(--gray);font-size:14px;padding:20px 0;display:none">등록된 사진이 없습니다</div>
+        </div>
+      </div>
+
       <!-- ── RESERVATIONS ── -->
       <div class="tab-panel" id="tab-reservations">
         <div class="panel-header">
@@ -694,8 +720,76 @@ function renderTab(name){
   else if(name==='departments') renderDepts();
   else if(name==='hospital') renderHospital();
   else if(name==='hours') renderHours();
+  else if(name==='photos') renderPhotos();
   else if(name==='reservations') renderReservations();
 }
+
+/* ── 병원 사진 관리 ── */
+function renderPhotos(){
+  var imgs = load('dino_about_imgs') || [];
+  document.getElementById('photoCnt').textContent = '(' + imgs.length + '/10)';
+  var list  = document.getElementById('photoList');
+  var empty = document.getElementById('photoEmpty');
+  if (!imgs.length) { list.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+  list.innerHTML = imgs.map(function(src, i) {
+    return '<div style="position:relative;border-radius:12px;overflow:hidden;aspect-ratio:4/3;background:var(--gray-light)">' +
+      '<img src="'+src+'" style="width:100%;height:100%;object-fit:cover"/>' +
+      '<div style="position:absolute;inset:0;background:rgba(0,0,0,0.35);opacity:0;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px" ' +
+        'onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">' +
+        (i>0?'<button onclick="movePhoto('+i+',-1)" style="background:rgba(255,255,255,0.9);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:14px">←</button>':'') +
+        '<button onclick="deletePhoto('+i+')" style="background:var(--red);color:white;border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:14px">✕</button>' +
+        (i<imgs.length-1?'<button onclick="movePhoto('+i+',1)" style="background:rgba(255,255,255,0.9);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:14px">→</button>':'') +
+      '</div>' +
+      '<div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.5);color:white;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px">'+(i+1)+'</div>' +
+    '</div>';
+  }).join('');
+}
+
+function addAboutImgs(input){
+  var files = Array.from(input.files);
+  if(!files.length) return;
+  var imgs = load('dino_about_imgs') || [];
+  var remain = 10 - imgs.length;
+  if(remain <= 0){ showToast('최대 10장까지만 등록 가능합니다', false); return; }
+  files = files.slice(0, remain);
+  var done = 0;
+  files.forEach(function(file){
+    compressImage(file, 800, 600, 0.8, function(compressed){
+      imgs.push(compressed);
+      done++;
+      if(done === files.length){
+        try {
+          localStorage.setItem('dino_about_imgs', JSON.stringify(imgs));
+          renderPhotos();
+          showToast(files.length + '장 추가되었습니다');
+        } catch(e) {
+          showToast('저장공간 부족! 더 적은 사진을 사용해주세요', false);
+        }
+      }
+    });
+  });
+  input.value='';
+}
+
+function deletePhoto(idx){
+  if(!confirm('이 사진을 삭제하시겠습니까?')) return;
+  var imgs = load('dino_about_imgs') || [];
+  imgs.splice(idx, 1);
+  localStorage.setItem('dino_about_imgs', JSON.stringify(imgs));
+  renderPhotos();
+  showToast('삭제되었습니다');
+}
+
+function movePhoto(idx, dir){
+  var imgs = load('dino_about_imgs') || [];
+  var newIdx = idx + dir;
+  if(newIdx < 0 || newIdx >= imgs.length) return;
+  var tmp = imgs[idx]; imgs[idx] = imgs[newIdx]; imgs[newIdx] = tmp;
+  localStorage.setItem('dino_about_imgs', JSON.stringify(imgs));
+  renderPhotos();
+}
+
 function renderAll(){ renderDashboard(); }
 
 /* ======================================================
