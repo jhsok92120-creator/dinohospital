@@ -1116,6 +1116,16 @@ window.addEventListener('scroll', () => {
 });
 
 /* ── INIT ── */
+// depts 데이터 마이그레이션: emoji → img
+(function(){
+  const depts = _load('dino_depts');
+  if (depts && depts.length && depts[0].emoji !== undefined) {
+    const migrated = depts.map(function(d){
+      return { id:d.id, img:'', name:d.name, sub:d.sub, time:d.time };
+    });
+    localStorage.setItem('dino_depts', JSON.stringify(migrated));
+  }
+})();
 applyHospital();
 applyNotices();
 applyDoctors();

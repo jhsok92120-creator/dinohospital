@@ -610,14 +610,14 @@ const DEFAULT_DOCTORS = [
   {id:3,name:'스피노 원장',title:'소아청소년과 전문의',badge:'원장',emoji:'🐊',spec:'아토피,ADHD,건강검진',desc:'아토피·알레르기 클리닉 담당'},
 ];
 const DEFAULT_DEPTS = [
-  {id:1,emoji:'🤧',name:'호흡기 진료',sub:'감기·독감·폐렴·천식',time:'월–금 09:00–18:00'},
-  {id:2,emoji:'🤒',name:'열·감염 진료',sub:'고열·수족구·장염·수두',time:'월–토 09:00–18:00'},
-  {id:3,emoji:'💉',name:'예방접종',sub:'영유아·독감·필수접종',time:'월–토 09:00–17:00'},
-  {id:4,emoji:'📏',name:'성장·발달',sub:'성장 모니터링·발달 평가',time:'월–금 10:00–17:00'},
-  {id:5,emoji:'🍼',name:'신생아 진료',sub:'신생아 건강검진·황달',time:'월–금 09:00–17:00'},
-  {id:6,emoji:'🍫',name:'알레르기·아토피',sub:'식품알레르기·아토피',time:'월–금 09:00–18:00'},
-  {id:7,emoji:'🧠',name:'소아신경·행동',sub:'ADHD·틱·발달지연 상담',time:'화·목 13:00–17:00'},
-  {id:8,emoji:'🩺',name:'영유아 건강검진',sub:'국가 무료 건강검진',time:'월–금 09:00–17:00'},
+  {id:1,img:'',name:'호흡기 진료',sub:'감기·독감·폐렴·천식',time:'월–금 09:00–18:00'},
+  {id:2,img:'',name:'열·감염 진료',sub:'고열·수족구·장염·수두',time:'월–토 09:00–18:00'},
+  {id:3,img:'',name:'예방접종',sub:'영유아·독감·필수접종',time:'월–토 09:00–17:00'},
+  {id:4,img:'',name:'성장·발달',sub:'성장 모니터링·발달 평가',time:'월–금 10:00–17:00'},
+  {id:5,img:'',name:'신생아 진료',sub:'신생아 건강검진·황달',time:'월–금 09:00–17:00'},
+  {id:6,img:'',name:'알레르기·아토피',sub:'식품알레르기·아토피',time:'월–금 09:00–18:00'},
+  {id:7,img:'',name:'소아신경·행동',sub:'ADHD·틱·발달지연 상담',time:'화·목 13:00–17:00'},
+  {id:8,img:'',name:'영유아 건강검진',sub:'국가 무료 건강검진',time:'월–금 09:00–17:00'},
 ];
 const DEFAULT_HOSPITAL = {
   name:'다이노아동병원', nameEn:'Dino Childrens Hospital',
@@ -641,7 +641,7 @@ const DEFAULT_HOURS = [
 function initData(){
   if(!load(KEY.notices)) save(KEY.notices, DEFAULT_NOTICES);
   if(!load(KEY.doctors)) save(KEY.doctors, DEFAULT_DOCTORS);
-  if(!load(KEY.depts))   save(KEY.depts,   DEFAULT_DEPTS);
+  save(KEY.depts, load(KEY.depts) && load(KEY.depts)[0] && !('emoji' in load(KEY.depts)[0]) ? load(KEY.depts) : DEFAULT_DEPTS);
   if(!load(KEY.hospital))save(KEY.hospital, DEFAULT_HOSPITAL);
   if(!load(KEY.hours))   save(KEY.hours,   DEFAULT_HOURS);
   if(!load(KEY.resvs))   save(KEY.resvs,   []);
