@@ -862,7 +862,11 @@ function applyNotices() {
 
 /* ── 의료진 반영 ── */
 function applyDoctors() {
-  const docs = _load('dino_doctors');
+  let docs = _load('dino_doctors');
+  if (docs && (!Array.isArray(docs) || !docs[0] || !docs[0].name)) {
+    localStorage.removeItem('dino_doctors');
+    docs = null;
+  }
   if (!docs) return;
   const cards = document.querySelectorAll('.doc-card');
   if (cards.length === docs.length) {
@@ -897,7 +901,12 @@ function applyDoctors() {
 
 /* ── 진료과 반영 ── */
 function applyDepts() {
-  const depts = _load('dino_depts');
+  let depts = _load('dino_depts');
+  // 데이터 손상 시 자동 초기화
+  if (depts && (!Array.isArray(depts) || !depts[0] || !depts[0].name)) {
+    localStorage.removeItem('dino_depts');
+    depts = null;
+  }
   if (!depts || !depts.length) return;
   const grid = document.querySelector('.dept-grid');
   if (!grid) return;
