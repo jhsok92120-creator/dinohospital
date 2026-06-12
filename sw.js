@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dino-hospital-v1781264987';
+const CACHE_NAME = 'dino-hospital-v2';
 const URLS_TO_CACHE = [
   '/dinohospital/',
   '/dinohospital/index.html',
@@ -7,7 +7,6 @@ const URLS_TO_CACHE = [
   '/dinohospital/icon-512.png',
 ];
 
-// 설치: 핵심 파일 캐시
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(URLS_TO_CACHE))
@@ -15,7 +14,6 @@ self.addEventListener('install', event => {
   self.skipWaiting();
 });
 
-// 활성화: 이전 캐시 삭제
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -25,8 +23,10 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// fetch: 캐시 우선, 없으면 네트워크
 self.addEventListener('fetch', event => {
+  // chrome-extension 등 http/https 아닌 요청 무시
+  if (!event.request.url.startsWith('http')) return;
+
   event.respondWith(
     caches.match(event.request).then(cached => {
       if (cached) return cached;
