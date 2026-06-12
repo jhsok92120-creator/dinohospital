@@ -649,11 +649,10 @@ const DEFAULT_HOURS = [
 function initData(){
   if(!load(KEY.notices)) save(KEY.notices, DEFAULT_NOTICES);
   if(!load(KEY.doctors)) save(KEY.doctors, DEFAULT_DOCTORS);
-  save(KEY.depts, load(KEY.depts) && load(KEY.depts)[0] && !('emoji' in load(KEY.depts)[0]) ? load(KEY.depts) : DEFAULT_DEPTS);
+  if(!load(KEY.depts))   save(KEY.depts,   DEFAULT_DEPTS);
   if(!load(KEY.hospital))save(KEY.hospital, DEFAULT_HOSPITAL);
   if(!load(KEY.hours))   save(KEY.hours,   DEFAULT_HOURS);
   if(!load(KEY.resvs))   save(KEY.resvs,   []);
-  // GAS URL 기본값
   if(!localStorage.getItem('dino_gasUrl')) localStorage.setItem('dino_gasUrl','https://script.google.com/macros/s/AKfycbyAIQ11fv-UtPZYuq4cBrrMnYQB1z1xUJympipj63cnM0qJm1heUgTW5fXcIszDSXmXfw/exec');
 }
 
