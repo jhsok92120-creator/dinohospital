@@ -620,7 +620,7 @@ const DEFAULT_DEPTS = [
   {id:8,emoji:'🩺',name:'영유아 건강검진',sub:'국가 무료 건강검진',time:'월–금 09:00–17:00'},
 ];
 const DEFAULT_HOSPITAL = {
-  name:'다이노아동병원', nameEn:'Dino Children\'s Hospital',
+  name:'다이노아동병원', nameEn:'Dino Childrens Hospital',
   phone:'053-000-0000', year:2010,
   addr:'대구광역시 수성구 어린이로 45 다이노빌딩 2·3층',
   parking:'건물 지하 주차장 (2시간 무료)',
@@ -969,30 +969,109 @@ function editDept(id){
   const depts=load(KEY.depts)||[];
   const d=depts.find(function(x){return x.id===id;});
   if(!d) return;
-  window._editDeptImg = d.img || '';
-  const modal = document.createElement('div');
-  modal.id = 'deptEditModal';
-  modal.style.cssText = 'position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px';
-  const imgPreviewHtml = d.img
-    ? '<img src="' + d.img + '" style="width:60px;height:50px;object-fit:cover;border-radius:6px"/>'
-    : '<div style="width:60px;height:50px;background:#EEEEF5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#7B7B9A">없음</div>';
-  modal.innerHTML =
-    '<div style="background:white;border-radius:16px;padding:28px;width:420px;max-width:95vw;position:relative">' +
-    '<button onclick="document.getElementById('deptEditModal').remove()" style="position:absolute;top:12px;right:12px;background:#EEEEF5;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px">✕</button>' +
-    '<div style="font-size:16px;font-weight:900;margin-bottom:16px">진료과 수정</div>' +
-    '<div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">진료과명</label><input class="form-input" id="ed_name" value="' + (d.name||'') + '"/></div>' +
-    '<div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">설명</label><input class="form-input" id="ed_sub" value="' + (d.sub||'') + '"/></div>' +
-    '<div style="margin-bottom:12px"><label style="font-size:13px;font-weight:600;display:block;margin-bottom:6px">진료 시간</label><input class="form-input" id="ed_time" value="' + (d.time||'') + '"/></div>' +
-    '<div style="margin-bottom:16px"><label style="font-size:13px;font-weight:600;display:block;margin-bottom:8px">이미지</label>' +
-    '<div style="display:flex;align-items:center;gap:12px">' +
-    '<div id="ed_imgPreview">' + imgPreviewHtml + '</div>' +
-    '<label style="cursor:pointer;background:#EEEEF5;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600">📷 변경' +
-    '<input type="file" accept="image/*" style="display:none" onchange="editDeptImgChange(this)"/></label>' +
-    '<button onclick="clearDeptImg()" style="background:none;border:1px solid #EEEEF5;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;color:#7B7B9A">제거</button>' +
-    '</div></div>' +
-    '<button onclick="saveDeptEdit(' + id + ')" style="width:100%;padding:13px;background:#FF7A2F;color:white;border:none;border-radius:28px;font-size:15px;font-weight:700;cursor:pointer">💾 저장하기</button>' +
-    '</div>';
-  document.body.appendChild(modal);
+  window._editDeptImg = d.img||'';
+
+  // 기존 모달 제거
+  var old=document.getElementById('deptEditModal');
+  if(old) old.remove();
+
+  // DOM으로 모달 생성 (따옴표 충돌 없음)
+  var overlay=document.createElement('div');
+  overlay.id='deptEditModal';
+  overlay.style.cssText='position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.onclick=function(ev){if(ev.target===overlay)overlay.remove();};
+
+  var box=document.createElement('div');
+  box.style.cssText='background:white;border-radius:16px;padding:28px;width:420px;max-width:95vw;position:relative';
+
+  // 닫기 버튼
+  var closeBtn=document.createElement('button');
+  closeBtn.textContent='✕';
+  closeBtn.style.cssText='position:absolute;top:12px;right:12px;background:#EEEEF5;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px';
+  closeBtn.onclick=function(){overlay.remove();};
+  box.appendChild(closeBtn);
+
+  // 제목
+  var title=document.createElement('div');
+  title.textContent='진료과 수정';
+  title.style.cssText='font-size:16px;font-weight:900;margin-bottom:16px';
+  box.appendChild(title);
+
+  // 입력 필드 생성 함수
+  function makeField(labelText, inputId, value){
+    var wrap=document.createElement('div');
+    wrap.style.marginBottom='12px';
+    var lbl=document.createElement('label');
+    lbl.textContent=labelText;
+    lbl.style.cssText='font-size:13px;font-weight:600;display:block;margin-bottom:6px';
+    var inp=document.createElement('input');
+    inp.className='form-input';
+    inp.id=inputId;
+    inp.value=value||'';
+    wrap.appendChild(lbl);
+    wrap.appendChild(inp);
+    box.appendChild(wrap);
+  }
+  makeField('진료과명','ed_name',d.name);
+  makeField('설명','ed_sub',d.sub);
+  makeField('진료 시간','ed_time',d.time);
+
+  // 이미지 영역
+  var imgWrap=document.createElement('div');
+  imgWrap.style.marginBottom='16px';
+  var imgLbl=document.createElement('label');
+  imgLbl.textContent='이미지';
+  imgLbl.style.cssText='font-size:13px;font-weight:600;display:block;margin-bottom:8px';
+  imgWrap.appendChild(imgLbl);
+
+  var imgRow=document.createElement('div');
+  imgRow.style.cssText='display:flex;align-items:center;gap:12px';
+
+  // 미리보기
+  var preview=document.createElement('div');
+  preview.id='ed_imgPreview';
+  if(d.img){
+    var pi=document.createElement('img');
+    pi.src=d.img;
+    pi.style.cssText='width:60px;height:50px;object-fit:cover;border-radius:6px';
+    preview.appendChild(pi);
+  } else {
+    preview.style.cssText='width:60px;height:50px;background:#EEEEF5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#7B7B9A';
+    preview.textContent='없음';
+  }
+  imgRow.appendChild(preview);
+
+  // 변경 버튼
+  var fileLbl=document.createElement('label');
+  fileLbl.style.cssText='cursor:pointer;background:#EEEEF5;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600';
+  fileLbl.textContent='📷 변경';
+  var fileInput=document.createElement('input');
+  fileInput.type='file';
+  fileInput.accept='image/*';
+  fileInput.style.display='none';
+  fileInput.onchange=function(){editDeptImgChange(this);};
+  fileLbl.appendChild(fileInput);
+  imgRow.appendChild(fileLbl);
+
+  // 제거 버튼
+  var clearBtn=document.createElement('button');
+  clearBtn.textContent='제거';
+  clearBtn.style.cssText='background:none;border:1px solid #EEEEF5;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;color:#7B7B9A';
+  clearBtn.onclick=function(){clearDeptImg();};
+  imgRow.appendChild(clearBtn);
+
+  imgWrap.appendChild(imgRow);
+  box.appendChild(imgWrap);
+
+  // 저장 버튼
+  var saveBtn=document.createElement('button');
+  saveBtn.textContent='💾 저장하기';
+  saveBtn.style.cssText='width:100%;padding:13px;background:#FF7A2F;color:white;border:none;border-radius:28px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
+  saveBtn.onclick=function(){saveDeptEdit(id);};
+  box.appendChild(saveBtn);
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
 }
 
 function editDeptImg(input, id){
