@@ -3,7 +3,81 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>다이노아동병원 | 아이들의 건강한 친구</title>
+  <title>다이노아동병원 | 아이들이 좋아하는 소아청소년과 · 대구 수성구</title>
+  <!-- ── SEO 기본 메타태그 ── -->
+  <meta name="description" content="다이노아동병원 | 소아청소년과 전문의가 직접 진료합니다. 호흡기, 예방접종, 성장발달, 알레르기, 신생아 진료. 온라인 예약 가능. 대구 수성구 소아과."/>
+  <meta name="keywords" content="다이노아동병원, 소아과, 소아청소년과, 대구소아과, 수성구소아과, 아동병원, 예방접종, 성장발달, 알레르기, 신생아진료, 온라인예약"/>
+  <meta name="author" content="다이노아동병원"/>
+  <meta name="robots" content="index, follow"/>
+  <link rel="canonical" href="https://jhsok92120-creator.github.io/dinohospital/"/>
+
+  <!-- ── Open Graph (카카오·페이스북 공유) ── -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="다이노아동병원"/>
+  <meta property="og:title" content="다이노아동병원 | 아이들이 좋아하는 소아청소년과"/>
+  <meta property="og:description" content="소아청소년과 전문의가 직접 진료합니다. 호흡기·예방접종·성장발달·알레르기·신생아 진료. 대구 수성구. 온라인 예약 가능."/>
+  <meta property="og:url" content="https://jhsok92120-creator.github.io/dinohospital/"/>
+  <meta property="og:image" content="https://jhsok92120-creator.github.io/dinohospital/icon-512.png"/>
+  <meta property="og:locale" content="ko_KR"/>
+
+  <!-- ── Twitter Card ── -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="다이노아동병원 | 아이들이 좋아하는 소아청소년과"/>
+  <meta name="twitter:description" content="소아청소년과 전문의가 직접 진료합니다. 온라인 예약 가능. 대구 수성구."/>
+  <meta name="twitter:image" content="https://jhsok92120-creator.github.io/dinohospital/icon-512.png"/>
+
+  <!-- ── 구조화 데이터 (Google 검색 강화) ── -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "MedicalClinic",
+    "name": "다이노아동병원",
+    "alternateName": "Dino Children's Hospital",
+    "description": "소아청소년과 전문의가 직접 진료하는 아동병원입니다.",
+    "url": "https://jhsok92120-creator.github.io/dinohospital/",
+    "logo": "https://jhsok92120-creator.github.io/dinohospital/icon-512.png",
+    "image": "https://jhsok92120-creator.github.io/dinohospital/icon-512.png",
+    "telephone": "053-000-0000",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "어린이로 45",
+      "addressLocality": "수성구",
+      "addressRegion": "대구광역시",
+      "postalCode": "42000",
+      "addressCountry": "KR"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 35.8562,
+      "longitude": 128.6313
+    },
+    "openingHoursSpecification": [
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+        "opens": "09:00",
+        "closes": "18:00"
+      },
+      {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": "Saturday",
+        "opens": "09:00",
+        "closes": "13:00"
+      }
+    ],
+    "medicalSpecialty": "Pediatric",
+    "availableService": [
+      {"@type": "MedicalTherapy", "name": "소아청소년과 진료"},
+      {"@type": "MedicalTherapy", "name": "예방접종"},
+      {"@type": "MedicalTherapy", "name": "영유아 건강검진"},
+      {"@type": "MedicalTherapy", "name": "성장발달 상담"},
+      {"@type": "MedicalTherapy", "name": "알레르기·아토피 치료"}
+    ],
+    "sameAs": [
+      "https://jhsok92120-creator.github.io/dinohospital/"
+    ]
+  }
+  </script>
   <!-- PWA -->
   <link rel="manifest" href="manifest.json"/>
   <meta name="theme-color" content="#FF7A2F"/>
@@ -863,14 +937,17 @@ function applyNotices() {
 /* ── 의료진 반영 ── */
 function applyDoctors() {
   let docs = _load('dino_doctors');
+  // 손상된 데이터 자동 초기화
   if (docs && (!Array.isArray(docs) || !docs[0] || !docs[0].name)) {
     localStorage.removeItem('dino_doctors');
     docs = null;
   }
-  if (!docs) return;
+  // 없으면 기본 HTML(실제 사진 카드) 그대로 유지
+  if (!docs || !docs.length) return;
+
   const cards = document.querySelectorAll('.doc-card');
   if (cards.length === docs.length) {
-    // 카드 수 같으면 텍스트만 업데이트 → 이미지 보존
+    // 카드 수 같으면 텍스트/배지/전문분야만 업데이트 → 사진 보존
     docs.forEach((d, i) => {
       const card = cards[i];
       const badge = card.querySelector('.doc-dept-badge');
@@ -878,24 +955,36 @@ function applyDoctors() {
       const nameEl = card.querySelector('.doc-name');
       if (nameEl) nameEl.textContent = d.name;
       const titleEl = card.querySelector('.doc-title');
-      if (titleEl) titleEl.innerHTML = d.title + '<br>' + d.desc;
+      if (titleEl) titleEl.innerHTML = d.title + '<br>' + (d.desc||'');
       const specEl = card.querySelector('.doc-spec');
       if (specEl) specEl.innerHTML = d.spec.split(',').map(s => '<span>' + s.trim() + '</span>').join('');
     });
   } else {
-    // 수 다르면 전체 재렌더링 (이모지 기반)
+    // 카드 수 다르면(추가/삭제) 전체 재렌더링
     const grid = document.querySelector('.doc-grid');
     if (!grid) return;
-    const colors = ['c1','c2','c3','c1','c2'];
-    grid.innerHTML = docs.map((d,i) =>
-      '<div class="doc-card fade-in" style="transition-delay:' + (i*0.09) + 's">' +
-      '<div class="doc-img ' + colors[i%colors.length] + '">' + d.emoji +
-      '<span class="doc-dept-badge">' + d.badge + '</span></div>' +
-      '<div class="doc-info"><div class="doc-name">' + d.name + '</div>' +
-      '<div class="doc-title">' + d.title + '<br>' + d.desc + '</div>' +
-      '<div class="doc-spec">' + d.spec.split(',').map(s=>'<span>'+s.trim()+'</span>').join('') +
-      '</div></div></div>'
-    ).join('');
+    const bgColors = [
+      'linear-gradient(145deg,#C8E6C9,#A5D6A7)',
+      'linear-gradient(145deg,#DCEDC8,#C5E1A5)',
+      'linear-gradient(145deg,#FFF9C4,#FFF176)',
+      'linear-gradient(145deg,#B3E5FC,#81D4FA)',
+      'linear-gradient(145deg,#FFE0B2,#FFCC80)'
+    ];
+    grid.innerHTML = docs.map((d,i) => {
+      const bg = bgColors[i % bgColors.length];
+      const imgHtml = d.photo
+        ? '<img src="'+d.photo+'" alt="'+d.name+'" style="width:100%;height:100%;object-fit:cover;object-position:center top;display:block"/>'
+        : '<div style="font-size:80px;line-height:1">'+( d.emoji||'👨‍⚕️')+'</div>';
+      return '<div class="doc-card fade-in" style="transition-delay:'+(i*0.09)+'s">' +
+        '<div class="doc-img" style="background:'+bg+';position:relative;overflow:hidden;padding:0;display:flex;align-items:center;justify-content:center;height:190px">' +
+        '<span class="doc-dept-badge">'+d.badge+'</span>' +
+        imgHtml + '</div>' +
+        '<div class="doc-info">' +
+        '<div class="doc-name">'+d.name+'</div>' +
+        '<div class="doc-title">'+d.title+'<br>'+(d.desc||'')+'</div>' +
+        '<div class="doc-spec">'+d.spec.split(',').map(s=>'<span>'+s.trim()+'</span>').join('')+'</div>' +
+        '</div></div>';
+    }).join('');
   }
 }
 

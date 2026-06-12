@@ -387,7 +387,15 @@
           </div>
           <div class="form-grid-2" style="margin-bottom:12px">
             <div><label class="form-label">직위 배지</label><input class="form-input" id="docBadge" placeholder="원장 / 과장 / 전문의"/></div>
-            <div><label class="form-label">이모지 (프로필)</label><input class="form-input" id="docEmoji" placeholder="👨‍⚕️"/></div>
+            <div>
+              <label class="form-label">프로필 사진</label>
+              <div class="media-upload-area" onclick="document.getElementById('docPhotoFile').click()" style="padding:12px">
+                <div style="font-size:20px;margin-bottom:2px">📷</div>
+                <div style="font-size:12px;font-weight:600;color:var(--navy)">사진 선택</div>
+                <input type="file" id="docPhotoFile" accept="image/*" onchange="previewDocPhoto(this)" style="display:none"/>
+              </div>
+              <div id="docPhotoPreview" style="margin-top:6px"></div>
+            </div>
           </div>
           <div class="form-row">
             <label class="form-label">전문 분야 (쉼표로 구분)</label>
@@ -605,9 +613,9 @@ const DEFAULT_NOTICES = [
   {id:8,type:'이벤트',text:'영유아 발달 무료 상담 행사 (월 1회)',date:'매월 셋째 주 토요일'},
 ];
 const DEFAULT_DOCTORS = [
-  {id:1,name:'티라노 병원장',title:'소아청소년과 전문의',badge:'병원장',emoji:'🦖',spec:'호흡기,알레르기,성장',desc:'다이노대학교 의과대학 졸업\n소아청소년과 전문의 취득'},
-  {id:2,name:'트리케라톱스 원장',title:'소아청소년과 전문의',badge:'원장',emoji:'🦕',spec:'신생아,발달,예방접종',desc:'다이노대학병원 전임의 수료'},
-  {id:3,name:'스피노 원장',title:'소아청소년과 전문의',badge:'원장',emoji:'🐊',spec:'아토피,ADHD,건강검진',desc:'아토피·알레르기 클리닉 담당'},
+  {id:1,name:'티라노 병원장',title:'소아청소년과 전문의',badge:'병원장',photo:'',spec:'호흡기,알레르기,성장',desc:'다이노대학교 의과대학 졸업\n소아청소년과 전문의 취득'},
+  {id:2,name:'트리케라톱스 원장',title:'소아청소년과 전문의',badge:'원장',photo:'',spec:'신생아,발달,예방접종',desc:'다이노대학병원 전임의 수료'},
+  {id:3,name:'스피노 원장',title:'소아청소년과 전문의',badge:'원장',photo:'',spec:'아토피,ADHD,건강검진',desc:'아토피·알레르기 클리닉 담당'},
 ];
 const DEFAULT_DEPTS = [
   {id:1,img:'',name:'호흡기 진료',sub:'감기·독감·폐렴·천식',time:'월–금 09:00–18:00'},
@@ -857,19 +865,28 @@ function deleteNotice(id){
 function renderDoctors(){
   const docs=load(KEY.doctors)||[];
   document.getElementById('doctorList').innerHTML = docs.length
-    ? docs.map((d,i)=>`
-      <div class="doc-edit-card">
-        <div class="doc-card-header">
-          <div class="doc-card-name">${d.emoji} ${d.name} <span style="font-size:12px;color:var(--gray);font-weight:500">${d.badge}</span></div>
-          <div class="doc-card-actions">
-            <button class="btn btn-gray btn-sm" onclick="editDoctor(${d.id})">✏️ 수정</button>
-            <button class="btn btn-red btn-sm" onclick="deleteDoctor(${d.id})">삭제</button>
-          </div>
-        </div>
-        <div style="font-size:13px;color:var(--gray);margin-bottom:8px">${d.title}</div>
-        <div style="font-size:13px;color:var(--gray);white-space:pre-line;margin-bottom:8px">${d.desc}</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">${d.spec.split(',').map(s=>`<span style="background:var(--yellow-pale);color:var(--orange);font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600">${s.trim()}</span>`).join('')}</div>
-      </div>`).join('')
+    ? docs.map(function(d){
+        const photoHtml = d.photo
+          ? '<img src="'+d.photo+'" style="width:52px;height:52px;object-fit:cover;border-radius:50%;border:2px solid var(--orange);flex-shrink:0"/>'
+          : '<div style="width:52px;height:52px;border-radius:50%;background:var(--gray-light);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">👨‍⚕️</div>';
+        const specs = d.spec.split(',').map(function(s){
+          return '<span style="background:var(--yellow-pale);color:var(--orange);font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600">'+s.trim()+'</span>';
+        }).join('');
+        return '<div class="doc-edit-card">'+
+          '<div class="doc-card-header" style="display:flex;align-items:center;gap:14px">'+
+          photoHtml+
+          '<div style="flex:1">'+
+          '<div class="doc-card-name">'+d.name+' <span style="font-size:12px;color:var(--gray);font-weight:500">'+d.badge+'</span></div>'+
+          '<div style="font-size:13px;color:var(--gray);margin-top:2px">'+d.title+'</div>'+
+          '</div>'+
+          '<div class="doc-card-actions">'+
+          '<button class="btn btn-gray btn-sm" onclick="editDoctor('+d.id+')">✏️ 수정</button>'+
+          '<button class="btn btn-red btn-sm" onclick="deleteDoctor('+d.id+')">삭제</button>'+
+          '</div></div>'+
+          '<div style="font-size:13px;color:var(--gray);white-space:pre-line;margin:10px 0 8px">'+d.desc+'</div>'+
+          '<div style="display:flex;gap:6px;flex-wrap:wrap">'+specs+'</div>'+
+          '</div>';
+      }).join('')
     : '<p style="color:var(--gray);font-size:14px">등록된 의료진이 없습니다</p>';
 }
 function addDoctor(){
@@ -881,14 +898,31 @@ function addDoctor(){
     id:Date.now(),
     name, title,
     badge:document.getElementById('docBadge').value.trim()||'전문의',
-    emoji:document.getElementById('docEmoji').value.trim()||'👨‍⚕️',
+    photo:window._docPhoto||'',
     spec:document.getElementById('docSpec').value.trim()||'소아청소년과',
     desc:document.getElementById('docDesc').value.trim(),
   });
   save(KEY.doctors,docs);
-  ['docName','docTitle','docBadge','docEmoji','docSpec','docDesc'].forEach(id=>document.getElementById(id).value='');
+  ['docName','docTitle','docBadge','docSpec','docDesc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('docPhotoPreview').innerHTML='';
+  window._docPhoto='';
   renderDoctors();
   showToast('의료진이 추가되었습니다');
+}
+function previewDocPhoto(input){
+  if(!input.files[0]) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    window._docPhoto=e.target.result;
+    document.getElementById('docPhotoPreview').innerHTML=
+      '<div style="position:relative;display:inline-block">'+
+      '<img src="'+e.target.result+'" style="width:64px;height:64px;object-fit:cover;border-radius:50%;border:2px solid var(--orange)"/>'+
+      '<button onclick="window._docPhoto=\'\';document.getElementById(\'docPhotoPreview\').innerHTML=\'\'" '+
+      'style="position:absolute;top:-4px;right:-4px;background:var(--red);color:white;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer">✕</button>'+
+      '</div>';
+  };
+  reader.readAsDataURL(input.files[0]);
+  input.value='';
 }
 function deleteDoctor(id){
   if(!confirm('삭제하시겠습니까?')) return;
@@ -897,15 +931,137 @@ function deleteDoctor(id){
 }
 function editDoctor(id){
   const docs=load(KEY.doctors)||[];
-  const d=docs.find(x=>x.id===id);
+  const d=docs.find(function(x){return x.id===id;});
   if(!d) return;
-  const name=prompt('이름',d.name); if(name===null) return;
-  const title=prompt('직함',d.title); if(title===null) return;
-  const spec=prompt('전문분야 (쉼표구분)',d.spec); if(spec===null) return;
-  const desc=prompt('약력',d.desc); if(desc===null) return;
-  const badge=prompt('직위 배지',d.badge); if(badge===null) return;
-  Object.assign(d,{name,title,spec,desc,badge});
-  save(KEY.doctors,docs); renderDoctors(); showToast('수정되었습니다');
+  window._editDocPhoto = d.photo||'';
+
+  var old=document.getElementById('docEditModal');
+  if(old) old.remove();
+
+  var overlay=document.createElement('div');
+  overlay.id='docEditModal';
+  overlay.style.cssText='position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.onclick=function(ev){if(ev.target===overlay)overlay.remove();};
+
+  var box=document.createElement('div');
+  box.style.cssText='background:white;border-radius:16px;padding:28px;width:440px;max-width:95vw;position:relative;max-height:90vh;overflow-y:auto';
+
+  var closeBtn=document.createElement('button');
+  closeBtn.textContent='✕';
+  closeBtn.style.cssText='position:absolute;top:12px;right:12px;background:#EEEEF5;border:none;width:26px;height:26px;border-radius:50%;cursor:pointer;font-size:13px';
+  closeBtn.onclick=function(){overlay.remove();};
+  box.appendChild(closeBtn);
+
+  var title=document.createElement('div');
+  title.textContent='의료진 수정';
+  title.style.cssText='font-size:16px;font-weight:900;margin-bottom:16px';
+  box.appendChild(title);
+
+  function makeField(labelText,inputId,value,isTextarea){
+    var wrap=document.createElement('div');
+    wrap.style.marginBottom='12px';
+    var lbl=document.createElement('label');
+    lbl.textContent=labelText;
+    lbl.style.cssText='font-size:13px;font-weight:600;display:block;margin-bottom:6px';
+    var inp=isTextarea?document.createElement('textarea'):document.createElement('input');
+    inp.className='form-input';
+    inp.id=inputId;
+    inp.value=value||'';
+    if(isTextarea){inp.style.minHeight='70px';inp.style.resize='vertical';}
+    wrap.appendChild(lbl);
+    wrap.appendChild(inp);
+    box.appendChild(wrap);
+  }
+  makeField('이름','ed_doc_name',d.name);
+  makeField('직함','ed_doc_title',d.title);
+  makeField('직위 배지','ed_doc_badge',d.badge);
+  makeField('전문분야 (쉼표구분)','ed_doc_spec',d.spec);
+  makeField('약력','ed_doc_desc',d.desc,true);
+
+  // 사진 영역
+  var imgWrap=document.createElement('div');
+  imgWrap.style.marginBottom='16px';
+  var imgLbl=document.createElement('label');
+  imgLbl.textContent='프로필 사진';
+  imgLbl.style.cssText='font-size:13px;font-weight:600;display:block;margin-bottom:8px';
+  imgWrap.appendChild(imgLbl);
+
+  var imgRow=document.createElement('div');
+  imgRow.style.cssText='display:flex;align-items:center;gap:12px';
+
+  var preview=document.createElement('div');
+  preview.id='ed_doc_photo_preview';
+  if(d.photo){
+    var pi=document.createElement('img');
+    pi.src=d.photo;
+    pi.style.cssText='width:60px;height:60px;object-fit:cover;border-radius:50%;border:2px solid var(--orange)';
+    preview.appendChild(pi);
+  } else {
+    preview.style.cssText='width:60px;height:60px;border-radius:50%;background:#EEEEF5;display:flex;align-items:center;justify-content:center;font-size:24px';
+    preview.textContent='👨‍⚕️';
+  }
+  imgRow.appendChild(preview);
+
+  var fileLbl=document.createElement('label');
+  fileLbl.style.cssText='cursor:pointer;background:#EEEEF5;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600';
+  fileLbl.textContent='📷 사진 변경';
+  var fileInput=document.createElement('input');
+  fileInput.type='file';
+  fileInput.accept='image/*';
+  fileInput.style.display='none';
+  fileInput.onchange=function(){editDocPhotoChange(this);};
+  fileLbl.appendChild(fileInput);
+  imgRow.appendChild(fileLbl);
+
+  var clearBtn=document.createElement('button');
+  clearBtn.textContent='사진 제거';
+  clearBtn.style.cssText='background:none;border:1px solid #EEEEF5;padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;color:#7B7B9A';
+  clearBtn.onclick=function(){
+    window._editDocPhoto='';
+    var p=document.getElementById('ed_doc_photo_preview');
+    p.innerHTML='';
+    p.style.cssText='width:60px;height:60px;border-radius:50%;background:#EEEEF5;display:flex;align-items:center;justify-content:center;font-size:24px';
+    p.textContent='👨‍⚕️';
+  };
+  imgRow.appendChild(clearBtn);
+  imgWrap.appendChild(imgRow);
+  box.appendChild(imgWrap);
+
+  var saveBtn=document.createElement('button');
+  saveBtn.textContent='💾 저장하기';
+  saveBtn.style.cssText='width:100%;padding:13px;background:#FF7A2F;color:white;border:none;border-radius:28px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
+  saveBtn.onclick=function(){saveDocEdit(id);};
+  box.appendChild(saveBtn);
+
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+function editDocPhotoChange(input){
+  if(!input.files[0]) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    window._editDocPhoto=e.target.result;
+    var p=document.getElementById('ed_doc_photo_preview');
+    p.style='';
+    p.innerHTML='<img src="'+e.target.result+'" style="width:60px;height:60px;object-fit:cover;border-radius:50%;border:2px solid var(--orange)"/>';
+  };
+  reader.readAsDataURL(input.files[0]);
+  input.value='';
+}
+function saveDocEdit(id){
+  const docs=load(KEY.doctors)||[];
+  const d=docs.find(function(x){return x.id===id;});
+  if(!d) return;
+  d.name  = document.getElementById('ed_doc_name').value.trim()||d.name;
+  d.title = document.getElementById('ed_doc_title').value.trim();
+  d.badge = document.getElementById('ed_doc_badge').value.trim();
+  d.spec  = document.getElementById('ed_doc_spec').value.trim();
+  d.desc  = document.getElementById('ed_doc_desc').value.trim();
+  if(window._editDocPhoto !== null) d.photo = window._editDocPhoto;
+  save(KEY.doctors,docs);
+  document.getElementById('docEditModal').remove();
+  renderDoctors();
+  showToast('수정되었습니다');
 }
 
 /* ======================================================
