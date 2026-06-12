@@ -413,14 +413,23 @@
         </div>
         <div class="card">
           <div class="card-title">➕ 진료과 추가</div>
-          <div class="form-grid-3" style="margin-bottom:12px">
-            <div><label class="form-label">이모지</label><input class="form-input" id="deptEmoji" placeholder="🤧"/></div>
+          <div class="form-grid-2" style="margin-bottom:12px">
             <div><label class="form-label">진료과명 *</label><input class="form-input" id="deptName" placeholder="호흡기 진료"/></div>
             <div><label class="form-label">설명</label><input class="form-input" id="deptSub" placeholder="감기·독감·폐렴·천식"/></div>
           </div>
           <div class="form-row">
             <label class="form-label">진료 시간</label>
             <input class="form-input" id="deptTime" placeholder="월–금 09:00–18:00"/>
+          </div>
+          <div class="form-row">
+            <label class="form-label">진료과 이미지</label>
+            <div class="media-upload-area" onclick="document.getElementById('deptImgFile').click()" id="deptImgArea">
+              <div style="font-size:24px;margin-bottom:4px">🖼️</div>
+              <div style="font-size:13px;font-weight:600;color:var(--navy)">이미지 선택 (선택사항)</div>
+              <div style="font-size:11px;color:var(--gray);margin-top:2px">JPG · PNG · WEBP</div>
+              <input type="file" id="deptImgFile" accept="image/*" onchange="previewDeptImg(this)" style="display:none"/>
+            </div>
+            <div id="deptImgPreview" style="margin-top:8px"></div>
           </div>
           <button class="btn btn-orange" onclick="addDept()">➕ 진료과 추가</button>
         </div>
@@ -905,19 +914,19 @@ function editDoctor(id){
 function renderDepts(){
   const depts=load(KEY.depts)||[];
   document.getElementById('deptList').innerHTML = depts.length
-    ? depts.map(d=>`
-      <div class="dept-edit-card">
-        <div class="dept-emoji-big">${d.emoji}</div>
-        <div>
-          <div style="font-size:15px;font-weight:700">${d.name}</div>
-          <div style="font-size:13px;color:var(--gray)">${d.sub}</div>
-          <div style="font-size:12px;color:var(--orange);font-weight:600;margin-top:3px">${d.time}</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-gray btn-sm" onclick="editDept(${d.id})">✏️</button>
-          <button class="btn btn-red btn-sm" onclick="deleteDept(${d.id})">✕</button>
-        </div>
-      </div>`).join('')
+    ? depts.map(d=>{
+        const imgHtml = d.img
+          ? '<img src="'+d.img+'" style="width:56px;height:48px;object-fit:cover;border-radius:8px;flex-shrink:0"/>'
+          : '<div style="width:56px;height:48px;border-radius:8px;background:var(--gray-light);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gray);flex-shrink:0">없음</div>';
+        return '<div class="dept-edit-card">' + imgHtml +
+          '<div><div style="font-size:15px;font-weight:700">'+d.name+'</div>' +
+          '<div style="font-size:13px;color:var(--gray)">'+d.sub+'</div>' +
+          '<div style="font-size:12px;color:var(--orange);font-weight:600;margin-top:3px">'+d.time+'</div></div>' +
+          '<div style="display:flex;gap:8px">' +
+          '<button class="btn btn-gray btn-sm" onclick="editDept('+d.id+')">✏️</button>' +
+          '<button class="btn btn-red btn-sm" onclick="deleteDept('+d.id+')">✕</button>' +
+          '</div></div>';
+      }).join('')
     : '<p style="color:var(--gray);font-size:14px">없습니다</p>';
 }
 function addDept(){
@@ -926,14 +935,30 @@ function addDept(){
   const depts=load(KEY.depts)||[];
   depts.push({
     id:Date.now(),
-    emoji:document.getElementById('deptEmoji').value.trim()||'🏥',
+    img: window._deptImg || '',
     name,
     sub:document.getElementById('deptSub').value.trim(),
     time:document.getElementById('deptTime').value.trim(),
   });
   save(KEY.depts,depts);
-  ['deptEmoji','deptName','deptSub','deptTime'].forEach(id=>document.getElementById(id).value='');
+  ['deptName','deptSub','deptTime'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('deptImgPreview').innerHTML='';
+  window._deptImg = '';
   renderDepts(); showToast('진료과가 추가되었습니다');
+}
+function previewDeptImg(input){
+  if(!input.files[0]) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    window._deptImg = e.target.result;
+    document.getElementById('deptImgPreview').innerHTML =
+      '<div style="position:relative;display:inline-block">' +
+      '<img src="'+e.target.result+'" style="width:80px;height:64px;object-fit:cover;border-radius:8px;border:2px solid var(--orange)"/>' +
+      '<button onclick="window._deptImg=\'\';document.getElementById(\'deptImgPreview\').innerHTML=\'\'" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:white;border:none;border-radius:50%;width:18px;height:18px;font-size:11px;cursor:pointer">✕</button>' +
+      '</div>';
+  };
+  reader.readAsDataURL(input.files[0]);
+  input.value='';
 }
 function deleteDept(id){
   if(!confirm('삭제하시겠습니까?')) return;
@@ -943,12 +968,51 @@ function deleteDept(id){
 function editDept(id){
   const depts=load(KEY.depts)||[];
   const d=depts.find(x=>x.id===id); if(!d) return;
-  const name=prompt('진료과명',d.name); if(name===null) return;
-  const sub=prompt('설명',d.sub); if(sub===null) return;
-  const time=prompt('진료시간',d.time); if(time===null) return;
-  const emoji=prompt('이모지',d.emoji); if(emoji===null) return;
-  Object.assign(d,{name,sub,time,emoji});
-  save(KEY.depts,depts); renderDepts(); showToast('수정되었습니다');
+  // 인라인 편집 모달
+  const existing = d.img ? '<img src="'+d.img+'" style="width:60px;height:50px;object-fit:cover;border-radius:6px"/>' : '<div style="width:60px;height:50px;background:var(--gray-light);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gray)">없음</div>';
+  const html2 =
+    '<div style="position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:20px" id="deptEditModal">'+
+    '<div style="background:white;border-radius:16px;padding:28px;width:420px;max-width:95vw;position:relative">'+
+    '<button onclick="document.getElementById('deptEditModal').remove()" style="position:absolute;top:12px;right:12px;background:var(--gray-light);border:none;width:26px;height:26px;border-radius:50%;cursor:pointer">✕</button>'+
+    '<div style="font-size:16px;font-weight:900;margin-bottom:16px">진료과 수정</div>'+
+    '<div style="margin-bottom:12px"><label class="form-label">진료과명</label><input class="form-input" id="ed_name" value="'+d.name+'"/></div>'+
+    '<div style="margin-bottom:12px"><label class="form-label">설명</label><input class="form-input" id="ed_sub" value="'+(d.sub||'')+'"/></div>'+
+    '<div style="margin-bottom:12px"><label class="form-label">진료 시간</label><input class="form-input" id="ed_time" value="'+(d.time||'')+'"/></div>'+
+    '<div style="margin-bottom:16px"><label class="form-label">이미지</label>'+
+    '<div style="display:flex;align-items:center;gap:12px;margin-top:6px">'+
+    '<div id="ed_imgPreview">'+existing+'</div>'+
+    '<label style="cursor:pointer;background:var(--gray-light);padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600">📷 변경<input type="file" accept="image/*" style="display:none" onchange="editDeptImg(this,'+id+')"/></label>'+
+    '<button onclick="clearDeptImg('+id+')" style="background:none;border:1px solid var(--gray-light);padding:8px 12px;border-radius:8px;font-size:12px;cursor:pointer;color:var(--gray)">이미지 제거</button>'+
+    '</div></div>'+
+    '<button class="btn btn-orange" style="width:100%" onclick="saveDeptEdit('+id+')">💾 저장하기</button>'+
+    '</div></div>';
+  document.body.insertAdjacentHTML('beforeend', html2);
+  window._editDeptImg = d.img || null;
+}
+function editDeptImg(input, id){
+  if(!input.files[0]) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    window._editDeptImg=e.target.result;
+    document.getElementById('ed_imgPreview').innerHTML='<img src="'+e.target.result+'" style="width:60px;height:50px;object-fit:cover;border-radius:6px"/>';
+  };
+  reader.readAsDataURL(input.files[0]);
+  input.value='';
+}
+function clearDeptImg(id){
+  window._editDeptImg='';
+  document.getElementById('ed_imgPreview').innerHTML='<div style="width:60px;height:50px;background:var(--gray-light);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--gray)">없음</div>';
+}
+function saveDeptEdit(id){
+  const depts=load(KEY.depts)||[];
+  const d=depts.find(x=>x.id===id); if(!d) return;
+  d.name=document.getElementById('ed_name').value.trim()||d.name;
+  d.sub=document.getElementById('ed_sub').value.trim();
+  d.time=document.getElementById('ed_time').value.trim();
+  if(window._editDeptImg !== null) d.img=window._editDeptImg;
+  save(KEY.depts,depts);
+  document.getElementById('deptEditModal').remove();
+  renderDepts(); showToast('수정되었습니다');
 }
 
 /* ======================================================
