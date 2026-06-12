@@ -403,7 +403,7 @@
           </div>
           <div class="form-row">
             <label class="form-label">약력</label>
-            <textarea class="form-textarea" id="docDesc" placeholder="경북대학교 의과대학 졸업&#10;소아청소년과 전임의 수료"></textarea>
+            <textarea class="form-textarea" id="docDesc" placeholder="예) 경북대학교 의과대학 졸업&#10;소아청소년과 전문의 취득&#10;아동호흡기 클리닉 10년 운영"></textarea>
           </div>
           <button class="btn btn-orange" onclick="addDoctor()">➕ 의료진 추가</button>
         </div>
@@ -957,7 +957,7 @@ function editDoctor(id){
   title.style.cssText='font-size:16px;font-weight:900;margin-bottom:16px';
   box.appendChild(title);
 
-  function makeField(labelText,inputId,value,isTextarea){
+  function makeField(labelText,inputId,value,isTextarea,ph){
     var wrap=document.createElement('div');
     wrap.style.marginBottom='12px';
     var lbl=document.createElement('label');
@@ -967,16 +967,17 @@ function editDoctor(id){
     inp.className='form-input';
     inp.id=inputId;
     inp.value=value||'';
-    if(isTextarea){inp.style.minHeight='70px';inp.style.resize='vertical';}
+    if(ph) inp.placeholder=ph;
+    if(isTextarea){inp.style.minHeight='100px';inp.style.resize='vertical';}
     wrap.appendChild(lbl);
     wrap.appendChild(inp);
     box.appendChild(wrap);
   }
-  makeField('이름','ed_doc_name',d.name);
-  makeField('직함','ed_doc_title',d.title);
-  makeField('직위 배지','ed_doc_badge',d.badge);
-  makeField('전문분야 (쉼표구분)','ed_doc_spec',d.spec);
-  makeField('약력','ed_doc_desc',d.desc,true);
+  makeField('이름','ed_doc_name',d.name,false,'홍길동 원장');
+  makeField('직함','ed_doc_title',d.title,false,'소아청소년과 전문의');
+  makeField('직위 배지','ed_doc_badge',d.badge,false,'원장 / 과장 / 전문의');
+  makeField('전문분야 (쉼표로 구분)','ed_doc_spec',d.spec,false,'호흡기, 알레르기, 성장');
+  makeField('약력 (줄바꿈 가능)','ed_doc_desc',d.desc,true,'예) 경북대학교 의과대학 졸업\n소아청소년과 전문의 취득\n아동병원 10년 경력');
 
   // 사진 영역
   var imgWrap=document.createElement('div');
