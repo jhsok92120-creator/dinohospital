@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dino-hospital-v1781229131';
+const CACHE_NAME = 'dino-hospital-v1781236797';
 const URLS_TO_CACHE = [
   '/dinohospital/',
   '/dinohospital/index.html',

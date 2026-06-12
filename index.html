@@ -898,7 +898,7 @@ function applyDoctors() {
 /* ── 진료과 반영 ── */
 function applyDepts() {
   const depts = _load('dino_depts');
-  if (!depts) return;
+  if (!depts || !depts.length) return; // 없으면 기본 HTML 유지
   const grid = document.querySelector('.dept-grid');
   if (!grid) return;
   grid.innerHTML = depts.map((d,i) => {
@@ -1134,10 +1134,16 @@ applyHours();
 
 /* ── Service Worker 등록 ── */
 if ('serviceWorker' in navigator) {
+  // 기존 SW 캐시 전체 삭제 후 재등록
+  caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/dinohospital/sw.js')
-      .then(reg => console.log('SW 등록 완료:', reg.scope))
-      .catch(err => console.log('SW 등록 실패:', err));
+    navigator.serviceWorker.getRegistrations().then(regs => {
+      regs.forEach(reg => reg.unregister());
+    }).then(() => {
+      navigator.serviceWorker.register('/dinohospital/sw.js')
+        .then(reg => console.log('SW 등록 완료:', reg.scope))
+        .catch(err => console.log('SW 등록 실패:', err));
+    });
   });
 }
 
