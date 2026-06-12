@@ -729,8 +729,8 @@
         <div class="doc-modal-section-title">📋 약력</div>
         <div class="doc-modal-desc" id="dmDesc"></div>
       </div>
-      <a href="#reservation" class="doc-modal-resv-btn" onclick="closeDocModal()">
-        📅 이 선생님께 예약하기
+      <a href="#reservation" class="doc-modal-resv-btn" onclick="bookWithDoctor(this)">
+        📅 예약하기
       </a>
     </div>
   </div>
@@ -1299,6 +1299,37 @@ function openDocModal(idx) {
 function closeDocModal() {
   document.getElementById('docModal').classList.remove('open');
   document.body.style.overflow = '';
+}
+function bookWithDoctor(btn) {
+  // 현재 모달에 표시된 의사 이름 읽기
+  const docName = document.getElementById('dmName').textContent || '';
+  closeDocModal();
+  // 예약 섹션으로 스크롤
+  const resvSection = document.getElementById('reservation');
+  if (resvSection) {
+    setTimeout(function() {
+      resvSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  }
+  // 희망 원장 드롭다운 자동 설정
+  setTimeout(function() {
+    const doctorSelect = document.getElementById('rf_doctor');
+    if (!doctorSelect || !docName) return;
+    const options = doctorSelect.options;
+    for (var i = 0; i < options.length; i++) {
+      if (options[i].value === docName) {
+        doctorSelect.selectedIndex = i;
+        // 선택된 항목 하이라이트
+        doctorSelect.style.borderColor = 'var(--orange)';
+        doctorSelect.style.background = 'var(--yellow-pale)';
+        setTimeout(function() {
+          doctorSelect.style.borderColor = '';
+          doctorSelect.style.background = '';
+        }, 2000);
+        break;
+      }
+    }
+  }, 500);
 }
 
 /* ── 공지 상세 보기 ── */
