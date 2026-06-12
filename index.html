@@ -824,12 +824,16 @@ function applyHospital() {
 
 /* ── 공지사항 반영 ── */
 function applyNotices() {
-  const notices = _load('dino_notices');
-  if (!notices) return;
+  const defaultNotices = [
+    {id:1,type:'공지',text:'다이노아동병원 홈페이지가 개설되었습니다',body:'',media:[],date:'2026-06-13'},
+    {id:2,type:'이벤트',text:'개설 기념 첫 방문 진료비 할인 이벤트',body:'',media:[],date:'상시'},
+  ];
+  const notices = _load('dino_notices') || defaultNotices;
   const pub = notices.filter(n => n.type === '공지');
   const evn = notices.filter(n => n.type === '이벤트');
-  const nList = document.querySelector('#notice .notice-col:first-child .notice-list');
-  const eList = document.querySelector('#notice .notice-col:last-child .notice-list');
+  const cols = document.querySelectorAll('#notice .notice-col');
+  const nList = cols[0] ? cols[0].querySelector('.notice-list') : null;
+  const eList = cols[1] ? cols[1].querySelector('.notice-list') : null;
   const mkRow = (n, type) => {
     const hasDetail = n.body || (n.media && n.media.length);
     const clickAttr = hasDetail ? 'onclick="showNoticeDetail(' + n.id + ')" style="cursor:pointer"' : '';
