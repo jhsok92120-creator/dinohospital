@@ -79,7 +79,7 @@
   }
   </script>
   <!-- PWA -->
-  <link rel="manifest" href="manifest.json"/>
+  <!-- manifest 임시 비활성화 -->
   <meta name="theme-color" content="#FF7A2F"/>
   <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -1473,20 +1473,13 @@ applyDepts();
 applyHours();
 initSlideshow();
 
-/* ── Service Worker 등록 ── */
+/* ── Service Worker 완전 제거 ── */
 if ('serviceWorker' in navigator) {
-  // 기존 SW 및 캐시 전체 초기화
   navigator.serviceWorker.getRegistrations().then(function(regs) {
     regs.forEach(function(reg) { reg.unregister(); });
   });
   caches.keys().then(function(keys) {
     keys.forEach(function(k) { caches.delete(k); });
-  });
-  // 새로 등록
-  window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/dinohospital/sw.js')
-      .then(function(reg) { console.log('SW OK:', reg.scope); })
-      .catch(function(err) { console.log('SW 실패:', err); });
   });
 }
 
